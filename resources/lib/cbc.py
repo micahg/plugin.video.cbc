@@ -13,8 +13,37 @@ class CBC:
         return
 
 
-    def parseLiveChannel(self):
-        return
+    def getImage(self, item):
+        # ignore 'cbc$liveImage' - the pix don't make sense after the first load
+        if 'defaultThumbnailUrl' in item:
+            return item['defaultThumbnailUrl']
+        elif 'cbc$staticImage' in item:
+            return item['cbc$staticImage']
+        elif 'cbc$featureImage' in item:
+            return item['cbc$featureImage']
+
+
+    def getLabels(self, item):
+        labels = {
+            'Studio': 'Canadian Broadcasting Corporation',
+            'Country': 'Canada'
+        }
+        if 'cbc$callSign' in item:
+            labels['ChannelName'] = item['cbc$callSign']
+            labels['Title'] = '{} {}'.format(item['cbc$callSign'], item['title'])
+        else:
+            labels['Title'] = item['title']
+
+        if 'cbc$show' in item:
+            labels['TVShowTitle'] = item['cbc$show']
+
+        if 'description' in item:
+            labels['Plot'] = item['description']
+            labels['PlotOutline'] = item['description']
+
+        if 'cbc$liveDisplayCategory' in item:
+            labels['Genre'] = item['cbc$liveDisplayCategory']
+        return labels
 
 
     def parseSmil(self, smil):
