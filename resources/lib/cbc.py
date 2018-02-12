@@ -1,4 +1,5 @@
 import requests
+from xml.dom.minidom import *
 from utils import saveCookies, loadCookies, log
 
 class CBC:
@@ -24,6 +25,11 @@ class CBC:
             return None
         saveCookies(self.session.cookies)
 
-        json.loads(r.text)[self.LIST_ELEMENT]
-
-        return
+        dom = parseString(r.text)
+        seq = dom.getElementsByTagName('seq')[0]
+        video = seq.getElementsByTagName('video')[0]
+        print video
+        src = video.attributes['src'].value
+        title = video.attributes['title'].value
+        abstract = video.attributes['abstract'].value
+        return src

@@ -9,7 +9,7 @@ Nothing yet, initially live TV, then maybe other live programming.
 
 ## API Details
 
-Live programming is keyed off of the following links:
+Content is keyed off of the following links:
 * [Live channels](http://tpfeed.cbc.ca/f/ExhSPC/t_t3UKJR6MAT?pretty=true&sort=pubDate%7Cdesc)
 * [Live](https://tpfeed.cbc.ca/f/ExhSPC/FNiv9xQx_BnT?q=id:*&pretty=true&sort=pubDate%7Cdesc)
 

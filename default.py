@@ -1,8 +1,18 @@
 from resources.lib.utils import log
 from resources.lib.livechannels import *
+from resources.lib.cbc import *
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon, os, urllib, urlparse
 
 LIVE_CHANNELS = 'Live Channels'
+
+
+def playSmil(smil):
+    cbc = CBC()
+    url = cbc.parseSmil(smil)
+    log('MICAH url is "{}"'.format(url), True)
+    p = xbmc.Player()
+    p.play(url)
+    return
 
 
 def liveChannelsMenu():
@@ -57,3 +67,4 @@ else:
     elif 'smil' in values:
         smil = values['smil'][0]
         log('MICAH smil = {}'.format(smil), True)
+        playSmil(smil)
