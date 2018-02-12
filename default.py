@@ -1,32 +1,54 @@
 from resources.lib.utils import log
 from resources.lib.livechannels import *
+from resources.lib.liveprograms import *
 from resources.lib.cbc import *
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon, os, urllib, urlparse
 
 LIVE_CHANNELS = 'Live Channels'
+LIVE_PROGRAMS = 'Live Programs'
 
 
 def playSmil(smil):
     cbc = CBC()
     url = cbc.parseSmil(smil)
-    log('MICAH url is "{}"'.format(url), True)
     p = xbmc.Player()
     p.play(url)
     return
 
 
+def liveProgramsMenu():
+    progs = LivePrograms()
+    prog_list = progs.getLivePrograms()
+    for prog in prog_list:
+        # skip unavailable streams
+        if not prog['availabilityState'] == 'available':
+            continue
+        elif prog['availableDate'] == 0:
+            continue
+
+        labels = {
+            'Title': prog['title']
+        }
+        item = xbmcgui.ListItem(prog['title'])
+        values = {
+            'smil': prog['content'][0]['url']
+        }
+        xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),
+                                    url=sys.argv[0] + "?" + urllib.urlencode(values),
+                                    listitem=item,
+                                    isFolder=False)
+
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+
 def liveChannelsMenu():
-    log('Micah live channels menu', True)
     chans = LiveChannels()
     chan_list = chans.getLiveChannels()
     for channel in chan_list:
-        #print '{} {}: {}'.format(item['cbc$callSign'], item['title'], item['description'])
-        #print item['content'][0]['url'] + '\n'
         labels = {
             'Title': channel['cbc$callSign']
         }
         item = xbmcgui.ListItem(channel['cbc$callSign'])
-        #item = xbmcgui.ListItem(channel['cbc$callSign'])
         values = {
             'smil': channel['content'][0]['url']
         }
@@ -39,14 +61,16 @@ def liveChannelsMenu():
     return
 
 def mainMenu():
-    labels = { 'Title': LIVE_CHANNELS }
-    item = xbmcgui.ListItem(LIVE_CHANNELS)
-    item.setInfo(type="Video", infoLabels=labels)
-    values = { 'menu': LIVE_CHANNELS }
-    xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),
-                                url=sys.argv[0] + "?" + urllib.urlencode(values),
-                                listitem=item,
-                                isFolder=True)
+
+    for menu_item in [LIVE_CHANNELS, LIVE_PROGRAMS]:
+        labels = { 'Title': menu_item }
+        item = xbmcgui.ListItem(menu_item)
+        item.setInfo(type="Video", infoLabels=labels)
+        values = { 'menu': menu_item }
+        xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),
+                                    url=sys.argv[0] + "?" + urllib.urlencode(values),
+                                    listitem=item,
+                                    isFolder=True)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
     return
 
@@ -60,11 +84,12 @@ if len(sys.argv[2]) == 0:
     mainMenu()
 else:
     values = urlparse.parse_qs(sys.argv[2][1:])
-    log('MICAH values = {}'.format(values), True)
     if 'menu' in values:
-        if values['menu'][0] == LIVE_CHANNELS:
+        menu = values['menu'][0]
+        if menu == LIVE_CHANNELS:
             liveChannelsMenu()
+        elif menu == LIVE_PROGRAMS:
+            liveProgramsMenu()
     elif 'smil' in values:
         smil = values['smil'][0]
-        log('MICAH smil = {}'.format(smil), True)
         playSmil(smil)
