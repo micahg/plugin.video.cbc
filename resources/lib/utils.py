@@ -3,7 +3,9 @@ from requests.utils import dict_from_cookiejar
 from requests.cookies import cookiejar_from_dict
 
 def getCookieFile():
-
+    """
+    Get the cookies file
+    """
     try:
         import xbmc, xbmcaddon
         base = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
@@ -33,7 +35,41 @@ def loadCookies():
             cookies = pickle.load(f)
             return cookiejar_from_dict(cookies)
     except IOError as err:
-        print 'Unable to load cookies: {}'.format(err)
+        log('Unable to load cookies: {}'.format(err), True)
+        return None
+
+    return None
+
+
+def getAuthorizationFile():
+    """
+    Get the authorization file
+    """
+    try:
+        import xbmc, xbmcaddon
+        base = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+    except:
+        base = os.getcwd()
+
+    return os.path.join(base, 'authorization')
+
+
+def saveAuthorization(authorization):
+    with open(getAuthorizationFile(), 'w') as f:
+        pickle.dump(authorization, f)
+
+
+def loadAuthorization():
+    """
+    Load authorization from the authorization file into an object
+    @return an object
+    """
+    try:
+        with open(getAuthorizationFile(), 'r') as f:
+            authorization = pickle.load(f)
+            return authorization
+    except IOError as err:
+        log('Unable to load cookies: {}'.format(err), True)
         return None
 
     return None

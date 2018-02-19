@@ -26,5 +26,5 @@ class LivePrograms:
         saveCookies(self.session.cookies)
 
         streams = []
-        items = json.loads(r.text)[self.LIST_ELEMENT]
+        items = json.loads(r.content)[self.LIST_ELEMENT]
         return items

@@ -5,7 +5,9 @@ online services.
 
 ## What is supported
 
-Nothing yet, initially live TV, then maybe other live programming.
+* Live Stations
+* Live events
+* Shows
 
 ## API Details
 
