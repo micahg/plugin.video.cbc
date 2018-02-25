@@ -18,6 +18,9 @@ from resources.lib.liveprograms import *
 from resources.lib.shows import *
 from resources.lib.cbc import *
 
+def progress(x):
+    print x
+
 cbc = CBC()
 chans = LiveChannels()
 events = LivePrograms()
@@ -39,7 +42,8 @@ elif options.video:
     print res
     sys.exit(0)
 elif options.shows:
-    res = shows.getShows(None if len(args) == 0 else args[0])
+    res = shows.getShows(None if len(args) == 0 else args[0],
+                         progress_callback = progress)
 else:
     print '\nPlease specify something to do\n'
     parser.print_help()

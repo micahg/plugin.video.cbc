@@ -104,7 +104,10 @@ def showsMenu(values):
         url = values['smil'][0]
     else:
         url = None
-    show_list = shows.getShows(url)
+    prog = xbmcgui.DialogProgress()
+    prog.create(getString(30003))
+    show_list = shows.getShows(url, progress_callback = prog.update)
+    prog.close()
     for show in show_list:
         labels = cbc.getLabels(show)
         image = show['image']
@@ -153,7 +156,7 @@ if len(sys.argv[2]) == 0:
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     if not os.path.exists(getAuthorizationFile()):
-        prog = xbmcgui.DialogProgress() 
+        prog = xbmcgui.DialogProgress()
         prog.create(getString(30001))
         cbc = CBC()
         prog.update(33)
