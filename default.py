@@ -110,7 +110,7 @@ def showsMenu(values):
     prog.close()
     for show in show_list:
         labels = cbc.getLabels(show)
-        image = show['image']
+        image = show['image'] if 'image' in show else None
         item = xbmcgui.ListItem(labels['title'])
         item.setIconImage(image)
         item.setInfo(type="Video", infoLabels=labels)
