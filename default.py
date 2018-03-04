@@ -8,9 +8,9 @@ import xbmc, xbmcplugin, xbmcgui, xbmcaddon, os, urlparse
 
 getString = xbmcaddon.Addon().getLocalizedString
 
-LIVE_CHANNELS = 'Live Channels'
-LIVE_PROGRAMS = 'Live Programs'
-SHOWS = 'Shows'
+LIVE_CHANNELS = getString(30004)
+LIVE_PROGRAMS = getString(30005)
+SHOWS = getString(30006)
 
 addon_handle = int(sys.argv[1])
 

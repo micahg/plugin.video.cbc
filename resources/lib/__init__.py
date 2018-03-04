@@ -1,1 +1,1 @@
-# init
+__author__ = 't1m'
