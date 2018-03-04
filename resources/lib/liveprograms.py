@@ -14,7 +14,6 @@ class LivePrograms:
         session_cookies = loadCookies()
         if not session_cookies == None: 
             self.session.cookies = session_cookies 
-        return
 
 
     def getLivePrograms(self):

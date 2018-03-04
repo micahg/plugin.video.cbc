@@ -18,7 +18,6 @@ class Shows:
         session_cookies = loadCookies()
         if not session_cookies == None: 
             self.session.cookies = session_cookies 
-        return None
 
 
     def getHeaders(self):
@@ -138,5 +137,3 @@ class Shows:
         return {
             'url': dom.getElementsByTagName('url')[0].firstChild.nodeValue
         }
-
-        return None

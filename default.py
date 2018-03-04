@@ -22,7 +22,6 @@ def playSmil(smil, labels, image):
     item.setInfo(type="Video", infoLabels=labels)
     p = xbmc.Player()
     p.play(url, item)
-    return
 
 
 def playShow(values):
@@ -40,7 +39,6 @@ def playShow(values):
     item.setIconImage(image)
     p = xbmc.Player()
     p.play(res['url'], item)
-    return
 
 
 def liveProgramsMenu():
@@ -93,7 +91,6 @@ def liveChannelsMenu():
                                     isFolder=True)
 
     xbmcplugin.endOfDirectory(addon_handle)
-    return
 
 
 def showsMenu(values):
@@ -132,7 +129,6 @@ def showsMenu(values):
                                     isFolder = True)
 
     xbmcplugin.endOfDirectory(addon_handle)
-    return
 
 
 def mainMenu():
@@ -147,7 +143,6 @@ def mainMenu():
                                     listitem=item,
                                     isFolder=True)
     xbmcplugin.endOfDirectory(addon_handle)
-    return
 
 
 if len(sys.argv[2]) == 0:

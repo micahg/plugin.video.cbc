@@ -20,13 +20,12 @@ class CBC:
         session_cookies = loadCookies()
         if not session_cookies == None: 
             self.session.cookies = session_cookies 
-        return
 
 
     def getRegistrationURL(self):
         r = self.session.get(self.IDENTITIES_URL)
         if not r.status_code == 200:
-            log('ERROR: {} returns status of {}'.format(url, r.status_code), True)
+            log('ERROR: {} returns status of {}'.format(self.IDENTITIES_URL, r.status_code), True)
             return None
         saveCookies(self.session.cookies)
 

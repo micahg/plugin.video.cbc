@@ -2,7 +2,7 @@
 <addon id="plugin.video.cbc"
        name="Canadian Broadcasting Corp (CBC)"
        version="4.0.0"
-       provider-name="micahg">
+       provider-name="micahg,t1m">
   <requires>
     <import addon="xbmc.python" version="2.20.0"/>
     <import addon="script.module.requests" version="2.12.4"/>
@@ -11,14 +11,14 @@
 	<provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
-    <summary>CBC TV Kodi Plugin</summary>
-    <description>View online content from the Canadian Broadcasting Corporation.</description>
+    <summary lang="en">CBC TV Kodi Plugin</summary>
+    <description lang="en">View online content from the Canadian Broadcasting Corporation.</description>
     <platform>all</platform>
     <language>en</language>
-    <disclaimer>For bugs, requests or general questions visit the CBC TV thread on the Kodi forum.</disclaimer>
+    <disclaimer lang="en">For bugs, requests or general questions visit the CBC TV thread on the Kodi forum.</disclaimer>
     <license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
-    <forum>http://forum.kodi.tv/showthread.php?tid=235268</forum>
-    <website>https://github.com/micahg/plugin.video.snnow</website>
-    <source>https://github.com/micahg/plugin.video.snnow</source>
+    <forum>https://forum.kodi.tv/showthread.php?tid=328421</forum>
+    <website>https://watch.cbc.ca/</website>
+    <source>https://github.com/micahg/plugin.video.cbc</source>
   </extension>
 </addon>
