@@ -29,9 +29,11 @@ res = []
 
 if options.authorize:
     reg_url = cbc.getRegistrationURL()
+    print 'Registration URL: "{}"'.format(reg_url)
     if not cbc.registerDevice(reg_url):
         print 'Error: unable to authorize'
         sys.exit(1)
+    sys.exit(0)
 
 if options.chans:
     res = chans.getLiveChannels()
