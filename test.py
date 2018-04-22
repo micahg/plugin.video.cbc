@@ -5,9 +5,13 @@ from optparse import OptionParser
 # parse the options
 parser = OptionParser()
 parser.add_option('-a', '--authorize', action='store_true', dest='authorize')
+parser.add_option('-u', '--username', type='string', dest='username',
+                  help='CBC username')
+parser.add_option('-p', '--password', type='string', dest='password',
+                  help='CBC password')
 parser.add_option('-g', '--guid', type='string', dest='guid',
                   help="not actually a guid")
-parser.add_option('-p', '--programs', action='store_true', dest='progs')
+parser.add_option('-l', '--live-programs', action='store_true', dest='progs')
 parser.add_option('-c', '--channels', action='store_true', dest='chans')
 parser.add_option('-v', '--video', action='store_true', dest='video')
 parser.add_option('-s', '--shows', action='store_true', dest='shows')
@@ -28,11 +32,10 @@ shows = Shows()
 res = []
 
 if options.authorize:
-    reg_url = cbc.getRegistrationURL()
-    print 'Registration URL: "{}"'.format(reg_url)
-    if not cbc.registerDevice(reg_url):
-        print 'Error: unable to authorize'
+    if not cbc.authorize(options.username, options.password):
+        print 'Error: Authorization failed'
         sys.exit(1)
+    print 'Authorization successful'
     sys.exit(0)
 
 if options.chans:
@@ -40,7 +43,11 @@ if options.chans:
 elif options.progs:
     res = events.getLivePrograms()
 elif options.video:
-    res = shows.getStream(args[0])
+    try:
+        res = shows.getStream(args[0])
+    except CBCAuthError as e:
+        print ('ERROR: login required' if e.payment else 'ERROR: Unauthorized')
+        sys.exit(1)
     print res
     sys.exit(0)
 elif options.shows:
