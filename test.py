@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 import sys, os, re
 from optparse import OptionParser
 
@@ -23,7 +23,7 @@ from resources.lib.shows import *
 from resources.lib.cbc import *
 
 def progress(x):
-    print x
+    print(x)
 
 cbc = CBC()
 chans = LiveChannels()
@@ -32,10 +32,10 @@ shows = Shows()
 res = []
 
 if options.authorize:
-    if not cbc.authorize(options.username, options.password):
-        print 'Error: Authorization failed'
+    if not cbc.authorize(options.username, options.password, progress):
+        print('Error: Authorization failed')
         sys.exit(1)
-    print 'Authorization successful'
+    print('Authorization successful')
     sys.exit(0)
 
 if options.chans:
@@ -46,31 +46,31 @@ elif options.video:
     try:
         res = shows.getStream(args[0])
     except CBCAuthError as e:
-        print ('ERROR: login required' if e.payment else 'ERROR: Unauthorized')
+        print('ERROR: login required' if e.payment else 'ERROR: Unauthorized')
         sys.exit(1)
-    print res
+    print(res)
     sys.exit(0)
 elif options.shows:
     res = shows.getShows(None if len(args) == 0 else args[0],
                          progress_callback = progress)
 else:
-    print '\nPlease specify something to do\n'
+    print('\nPlease specify something to do\n')
     parser.print_help()
     sys.exit(1)
 
 for item in res:
     if options.guid == None:
         if options.chans:
-            print '{}) {} {}: {}'.format(item['guid'], item['cbc$callSign'], item['title'], item['description'])
+            print('{}) {} {}: {}'.format(item['guid'], item['cbc$callSign'], item['title'], item['description']))
         elif options.progs:
             if item['availabilityState'] == 'available':
-                print '{}) {}: {}'.format(item['guid'], item['title'], item['description'])
+                print('{}) {}: {}'.format(item['guid'], item['title'], item['description']))
         elif options.shows:
-            print '{}) {}: {}\n\t{}\n'.format(item['guid'],
+            print('{}) {}: {}\n\t{}\n'.format(item['guid'],
                                               item['title'].encode('utf-8'),
                                               item['description'].encode('utf-8'),
-                                              item['url'])
+                                              item['url']))
     elif item['guid'] == options.guid:
         smil = item['content'][0]['url']
-        print cbc.parseSmil(smil)
+        print(cbc.parseSmil(smil))
 
