@@ -1,5 +1,5 @@
 import requests, json
-from utils import saveCookies, loadCookies, log
+from .utils import saveCookies, loadCookies, log
 
 
 class LivePrograms:
@@ -12,8 +12,8 @@ class LivePrograms:
         # Create requests session object
         self.session = requests.Session()
         session_cookies = loadCookies()
-        if not session_cookies == None: 
-            self.session.cookies = session_cookies 
+        if not session_cookies == None:
+            self.session.cookies = session_cookies
 
 
     def getLivePrograms(self):

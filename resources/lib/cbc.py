@@ -2,8 +2,7 @@ import requests, uuid, urllib, json
 from xml.dom.minidom import *
 import xml.etree.ElementTree as ET
 
-from utils import saveCookies, loadCookies, saveAuthorization, log
-from operator import itemgetter
+from .utils import saveCookies, loadCookies, saveAuthorization, log
 
 class CBC:
 

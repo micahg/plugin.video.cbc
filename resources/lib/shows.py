@@ -1,6 +1,6 @@
 import requests, urllib
 from xml.dom.minidom import *
-from utils import saveCookies, loadCookies, loadAuthorization, log
+from .utils import saveCookies, loadCookies, loadAuthorization, log
 
 class CBCAuthError(Exception):
     def __init__(self, value, payment):
@@ -14,7 +14,7 @@ class Shows:
 
     def __init__(self):
         """
-        Init constants 
+        Init constants
         """
         self.SHOW_LIST_URL = 'https://api-cbc.cloud.clearleap.com/cloffice/client/web/browse/babb23ae-fe47-40a0-b3ed-cdc91e31f3d6'
         self.IMAGE_PROFILES = [ 'CBC-POSTER-1X', 'CBC-BANNER-1X' ]
@@ -24,8 +24,8 @@ class Shows:
         # Create requests session object
         self.session = requests.Session()
         session_cookies = loadCookies()
-        if not session_cookies == None: 
-            self.session.cookies = session_cookies 
+        if not session_cookies == None:
+            self.session.cookies = session_cookies
 
 
     def getHeaders(self):
@@ -48,23 +48,23 @@ class Shows:
         descriptions = item.getElementsByTagName('description')
         tags['description'] = '' if len(descriptions) == 0 else descriptions[0].firstChild.nodeValue
         image = None
-    
+
         # figure out where the thumbnails are
         thumbnails = item
         if len(item.getElementsByTagName('media:group')) > 0:
             thumbnails = item.getElementsByTagName('media:group')[0]
-    
+
         for thumb in thumbnails.getElementsByTagName('media:thumbnail'):
-            if thumb.attributes['profile'].value in self.IMAGE_PROFILES: 
+            if thumb.attributes['profile'].value in self.IMAGE_PROFILES:
                 tags['image'] = thumb.attributes['url'].value
                 break
-    
+
         # <media:credit role="releaseDate">2017-08-07T00:00:00</media:credit>
         for credit in item.getElementsByTagName('media:credit'):
             #if 'role' in credit.attributes:
             if credit.attributes['role'] == 'releaseDate':
                 tags['premiered'] = credit.attributes['role'].values
-    
+
         content_type = item.getElementsByTagName('clearleap:itemType')[0].firstChild.nodeValue
         if content_type == 'media':
             tag = item.getElementsByTagName('media:content')[0]

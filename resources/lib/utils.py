@@ -86,4 +86,4 @@ def log(msg, error = False):
         full_msg = "plugin.video.cbc: {}".format(msg)
         xbmc.log(full_msg, level=xbmc.LOGERROR if error else xbmc.LOGINFO)
     except:
-        print msg
+        print(msg)

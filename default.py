@@ -50,7 +50,7 @@ def play(labels, image, url):
     item.setArt({ 'thumb': image, 'poster': image })
     item.setInfo(type="Video", infoLabels=labels)
     helper = inputstreamhelper.Helper('hls')
-    if xbmcaddon.Addon().getSetting("ffmpeg") == 'false' and helper.check_inputstream():
+    if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
         item.setProperty('inputstreamaddon','inputstream.adaptive')
         item.setProperty('inputstream.adaptive.manifest_type', 'hls')
     xbmcplugin.setResolvedUrl(addon_handle, True, item)

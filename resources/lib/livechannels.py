@@ -1,5 +1,5 @@
 import requests, json
-from utils import saveCookies, loadCookies, log
+from .utils import saveCookies, loadCookies, log
 
 
 class LiveChannels:
@@ -11,8 +11,8 @@ class LiveChannels:
         # Create requests session object
         self.session = requests.Session()
         session_cookies = loadCookies()
-        if not session_cookies == None: 
-            self.session.cookies = session_cookies 
+        if not session_cookies == None:
+            self.session.cookies = session_cookies
 
 
     def getLiveChannels(self):
