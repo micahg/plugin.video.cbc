@@ -117,6 +117,8 @@ def liveProgramsMenu():
         url = sys.argv[0] + "?" + urlencode(values)
         xbmcplugin.addDirectoryItem(addon_handle, url, item,False)
 
+    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
+    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(addon_handle)
 
 
@@ -140,6 +142,8 @@ def liveChannelsMenu():
         url = sys.argv[0] + "?" + urlencode(values)
         xbmcplugin.addDirectoryItem(addon_handle, url, item, False)
 
+    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
+    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(addon_handle)
 
 
@@ -198,7 +202,9 @@ def showsMenu(values):
 
         plugin_url = sys.argv[0] + "?" + urlencode(values)
         xbmcplugin.addDirectoryItem(addon_handle, plugin_url, item, not isVideo)
-
+        
+    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
+    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(addon_handle)
 
 
