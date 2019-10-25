@@ -117,9 +117,8 @@ def liveProgramsMenu():
         url = sys.argv[0] + "?" + urlencode(values)
         xbmcplugin.addDirectoryItem(addon_handle, url, item,False)
 
-    if xbmcaddon.Addon().getSettingBool("ignorethe"):
-        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
-        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
+    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
+    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(addon_handle)
 
 
@@ -143,9 +142,6 @@ def liveChannelsMenu():
         url = sys.argv[0] + "?" + urlencode(values)
         xbmcplugin.addDirectoryItem(addon_handle, url, item, False)
 
-    if xbmcaddon.Addon().getSettingBool("ignorethe"):
-        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
-        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(addon_handle)
 
 
@@ -155,7 +151,13 @@ def showsMenu(values):
     if 'smil' in values:
         url = values['smil'][0]
     else:
+        # if there is no smil link this is the main menu of all shows, so it
+        # only has show titles (eg: not season or episode titles). In this
+        # situation, it is appropriate to sort by title and ignore 'The ...'
+        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
+        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
         url = None
+
     prog = xbmcgui.DialogProgress()
     prog.create(getString(30003))
     try:
@@ -205,9 +207,6 @@ def showsMenu(values):
         plugin_url = sys.argv[0] + "?" + urlencode(values)
         xbmcplugin.addDirectoryItem(addon_handle, plugin_url, item, not isVideo)
 
-    if xbmcaddon.Addon().getSettingBool("ignorethe"):
-        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
-        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(addon_handle)
 
 

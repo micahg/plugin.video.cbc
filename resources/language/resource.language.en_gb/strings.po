@@ -67,7 +67,3 @@ msgstr ""
 msgctxt "#30013"
 msgid "Use FFMPEG instead of inputstream.adaptive"
 msgstr ""
-
-msgctxt "#30014"
-msgid "Ignore "The" in show titles"
-msgstr ""
