@@ -1,4 +1,4 @@
-import requests, urllib
+import requests, urllib.request, urllib.parse, urllib.error
 from xml.dom.minidom import *
 from .utils import saveCookies, loadCookies, loadAuthorization, log
 
@@ -124,7 +124,7 @@ class Shows:
         if len(total) > 0:
             total_shows = int(total[0].firstChild.nodeValue)
             if progress_callback:
-                progress_callback(100*progress/total_shows)
+                progress_callback((100*progress) // total_shows)
             if  total_shows > len(results) + offset:
                 next_results = self.getShows(url, offset + len(results),
                                              progress_callback)
