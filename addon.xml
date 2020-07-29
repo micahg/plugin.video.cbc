@@ -2,16 +2,20 @@
 <addon id="plugin.video.cbc"
        name="Canadian Broadcasting Corp (CBC)"
        version="4.0.7"
-       provider-name="micahg,t1m">
+       provider-name="micahg,t1m,smf007">
   <requires>
-    <import addon="xbmc.python" version="2.26.0"/>
-    <import addon="script.module.requests" version="2.12.4"/>
-    <import addon="script.module.inputstreamhelper" version="0.3.3"/>
+    <import addon="xbmc.python" version="3.0.0"/>
+    <import addon="script.module.requests" version="2.22.0"/>
+    <import addon="script.module.inputstreamhelper" version="0.4.4"/>
   </requires>
   <extension point="xbmc.python.pluginsource" library="default.py">
 	<provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
+    <assets>
+      <icon>icon.png</icon>
+      <fanart>fanart.jpg</fanart>
+    </assets>
     <summary lang="en">CBC TV Kodi Plugin</summary>
     <description lang="en">View online content from the Canadian Broadcasting Corporation.</description>
     <platform>all</platform>

@@ -3,8 +3,8 @@ from resources.lib.livechannels import *
 from resources.lib.liveprograms import *
 from resources.lib.shows import *
 from resources.lib.cbc import *
-from urllib import urlencode
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon, os, urlparse
+from urllib.parse import urlencode
+import xbmc, xbmcplugin, xbmcgui, xbmcaddon, os, urllib.parse
 import inputstreamhelper
 
 getString = xbmcaddon.Addon().getLocalizedString
@@ -65,8 +65,8 @@ def playShow(values):
     smil = values['smil'][0]
     image = values['image'][0]
     labels = values['labels'][0]
-    labels = urlparse.parse_qs(labels)
-    for key in labels.keys():
+    labels = urllib.parse.parse_qs(labels)
+    for key in list(labels.keys()):
         labels[key] = labels[key][0]
     shows = Shows()
     try:
@@ -236,7 +236,7 @@ if len(sys.argv[2]) == 0:
 
     mainMenu()
 else:
-    values = urlparse.parse_qs(sys.argv[2][1:])
+    values = urllib.parse.parse_qs(sys.argv[2][1:])
     if 'video' in values and values['video'][0] == 'True':
         playShow(values)
     elif 'menu' in values:
@@ -249,6 +249,6 @@ else:
             showsMenu(values)
     elif 'smil' in values:
         smil = values['smil'][0]
-        labels = dict(urlparse.parse_qsl(values['labels'][0]))
+        labels = dict(urllib.parse.parse_qsl(values['labels'][0]))
         image = values['image'][0]
         playSmil(smil, labels, image)

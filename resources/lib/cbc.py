@@ -1,4 +1,4 @@
-import requests, uuid, urllib, json
+import requests, uuid, urllib.request, urllib.parse, urllib.error, json
 from xml.dom.minidom import *
 import xml.etree.ElementTree as ET
 
@@ -101,7 +101,7 @@ class CBC:
 
 
     def radiusLogin(self, username, password):
-        query = urllib.urlencode({'apikey': self.API_KEY})
+        query = urllib.parse.urlencode({'apikey': self.API_KEY})
 
         data = {
             'email': username,
@@ -119,7 +119,7 @@ class CBC:
 
 
     def radiusJWT(self, token):
-        query = urllib.urlencode({
+        query = urllib.parse.urlencode({
             'access_token': token,
             'apikey': self.API_KEY,
             'jwtapp': 'jwt'
