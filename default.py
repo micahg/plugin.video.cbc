@@ -225,7 +225,7 @@ def mainMenu():
 
     xbmcplugin.endOfDirectory(addon_handle)
 
-
+log('MICAH called at {}'.format(sys.argv[2]))
 if len(sys.argv[2]) == 0:
     # create the data folder if it doesn't exist
     data_path = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
