@@ -1,4 +1,4 @@
-import requests, uuid, urllib, json
+import requests, uuid, urllib.request, urllib.parse, urllib.error, json
 from xml.dom.minidom import *
 import xml.etree.ElementTree as ET
 
@@ -33,7 +33,8 @@ class CBC:
     def authorize(self, username = None, password = None, callback = None):
         full_auth = not username == None and not password == None
         r = self.session.get(self.IDENTITIES_URL)
-        callback(20 if full_auth else 50)
+        if not callback == None:
+            callback(20 if full_auth else 50)
         if not r.status_code == 200:
             log('ERROR: {} returns status of {}'.format(self.IDENTITIES_URL, r.status_code), True)
             return None
@@ -43,7 +44,8 @@ class CBC:
         login_url = dom.getElementsByTagName('loginUrl')[0].firstChild.nodeValue
 
         auth = self.registerDevice(reg_url)
-        callback(40 if full_auth else 100)
+        if not callback == None:
+            callback(40 if full_auth else 100)
         if auth == None:
             log('Device registration failed', True)
             return False
@@ -51,19 +53,22 @@ class CBC:
 
         if full_auth:
             token = self.radiusLogin(username, password)
-            callback(60)
+            if not callback == None:
+                callback(60)
             if token == None:
                 log('Radius Login failed', True)
                 return False
 
             jwt = self.radiusJWT(token)
-            callback(80)
+            if not callback == None:
+                callback(80)
             if jwt == None:
                 log('Radius JWT retrieval failed', True)
                 return False
 
             token = self.login(login_url, auth['devid'], jwt)
-            callback(100)
+            if not callback == None:
+                callback(100)
             if token == None:
                 log('Final login failed', True)
                 return False
@@ -96,7 +101,7 @@ class CBC:
 
 
     def radiusLogin(self, username, password):
-        query = urllib.urlencode({'apikey': self.API_KEY})
+        query = urllib.parse.urlencode({'apikey': self.API_KEY})
 
         data = {
             'email': username,
@@ -114,7 +119,7 @@ class CBC:
 
 
     def radiusJWT(self, token):
-        query = urllib.urlencode({
+        query = urllib.parse.urlencode({
             'access_token': token,
             'apikey': self.API_KEY,
             'jwtapp': 'jwt'

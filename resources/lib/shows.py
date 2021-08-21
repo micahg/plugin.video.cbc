@@ -1,4 +1,4 @@
-import requests, urllib
+import requests, urllib.request, urllib.parse, urllib.error
 from xml.dom.minidom import *
 from .utils import saveCookies, loadCookies, loadAuthorization, log
 
@@ -32,7 +32,7 @@ class Shows:
         auth = loadAuthorization()
         return None if auth == None else {
             'X-Clearleap-DeviceToken': auth['token'],
-            'X-Client-Version': '9.9.9',
+            'X-Client-Version': '9.99.99',
             'X-Client-Name': 'Android',
             'X-Clearleap-DeviceId': auth['devid']
         }
@@ -90,17 +90,18 @@ class Shows:
         LEAF.
         """
         headers = self.getHeaders()
-        show_url = self.SHOW_LIST_URL if url == None else url
+        show_url = self.SHOW_LIST_URL if url is None else url
         if offset > 0:
             show_url += '?offset={}'.format(offset)
-        r = self.session.get(show_url, headers = headers)
+
+        r = self.session.get(show_url, headers=headers)
 
         if r.status_code == 401 or r.status_code == 500:
             log('({}) {} returns {} status. Signaling authorization failure'\
                 .format('getShows', show_url, r.status_code), True)
             raise CBCAuthError('getShows', False)
         elif not r.status_code == 200:
-            log('(getShows) {} returns {} status'.format(url, r.status_code), True)
+            log('(getShows) {} returns {} status: "{}"'.format(url, r.status_code, r.content), True)
             return None
         saveCookies(self.session.cookies)
         dom = parseString(r.content)
@@ -124,7 +125,7 @@ class Shows:
         if len(total) > 0:
             total_shows = int(total[0].firstChild.nodeValue)
             if progress_callback:
-                progress_callback(100*progress/total_shows)
+                progress_callback((100*progress) // total_shows)
             if  total_shows > len(results) + offset:
                 next_results = self.getShows(url, offset + len(results),
                                              progress_callback)

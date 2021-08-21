@@ -20,7 +20,7 @@ def saveCookies(session_cookies):
     Write cookies to the cookie file
     @param session_cookies the session.cookies object to save
     """
-    with open(getCookieFile(), 'w') as f:
+    with open(getCookieFile(), 'wb') as f:
         cookies = dict_from_cookiejar(session_cookies)
         pickle.dump(cookies, f)
 
@@ -31,7 +31,7 @@ def loadCookies():
     @return a session.cookies object
     """
     try:
-        with open(getCookieFile(), 'r') as f:
+        with open(getCookieFile(), 'rb') as f:
             cookies = pickle.load(f)
             return cookiejar_from_dict(cookies)
     except IOError as err:
@@ -55,7 +55,7 @@ def getAuthorizationFile():
 
 
 def saveAuthorization(authorization):
-    with open(getAuthorizationFile(), 'w') as f:
+    with open(getAuthorizationFile(), 'wb') as f:
         pickle.dump(authorization, f)
 
 
@@ -65,7 +65,7 @@ def loadAuthorization():
     @return an object
     """
     try:
-        with open(getAuthorizationFile(), 'r') as f:
+        with open(getAuthorizationFile(), 'rb') as f:
             authorization = pickle.load(f)
             return authorization
     except IOError as err:
