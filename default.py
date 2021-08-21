@@ -1,8 +1,8 @@
 from resources.lib.utils import log, getAuthorizationFile
 from resources.lib.livechannels import *
 from resources.lib.liveprograms import *
-from resources.lib.shows import *
-from resources.lib.cbc import *
+from resources.lib.shows import Shows
+from resources.lib.cbc import CBC
 from urllib.parse import urlencode
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon, os, urllib.parse
 import inputstreamhelper
