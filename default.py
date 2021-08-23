@@ -14,6 +14,7 @@ from resources.lib.utils import log, getAuthorizationFile, getCookieFile
 from resources.lib.livechannels import LiveChannels
 from resources.lib.liveprograms import LivePrograms
 from resources.lib.shows import Shows, CBCAuthError
+from resources.lib.iptvmanager import IPTVManager
 
 getString = xbmcaddon.Addon().getLocalizedString
 LIVE_CHANNELS = getString(30004)
@@ -73,7 +74,7 @@ def play_smil():
     """Play an SMIL file."""
     cbc = CBC()
     url = cbc.parseSmil(plugin.args['url'][0])
-    labels = dict(parse_qsl(plugin.args['labels'][0]))
+    labels = dict(parse_qsl(plugin.args['labels'][0])) if 'labels' in plugin.args else None
     return play(labels, plugin.args['image'][0], url)
 
 
@@ -143,12 +144,19 @@ def live_programs_menu():
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
+@plugin.route('/iptv/channels')
+def iptv_channels():
+    """Send a list of IPTV channels."""
+    port = int(plugin.args.get('port')[0])
+    IPTVManager(port).send_channels()
+
+
 @plugin.route('/channels')
 def live_channels_menu():
     """Populate the menu with live channels."""
     xbmcplugin.setContent(plugin.handle, 'videos')
     chans = LiveChannels()
-    chan_list = chans.getLiveChannels()
+    chan_list = chans.get_live_channels()
     cbc = CBC()
     for channel in chan_list:
         labels = cbc.getLabels(channel)

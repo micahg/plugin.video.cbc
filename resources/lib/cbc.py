@@ -204,7 +204,6 @@ class CBC:
 
 
     def parseSmil(self, smil):
-        log('Micah getting "{}"'.format(smil), True)
         r = self.session.get(smil)
 
         if not r.status_code == 200:

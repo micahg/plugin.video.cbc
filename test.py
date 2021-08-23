@@ -39,7 +39,7 @@ if options.authorize:
     sys.exit(0)
 
 if options.chans:
-    res = chans.getLiveChannels()
+    res = chans.get_live_channels()
 elif options.progs:
     res = events.getLivePrograms()
 elif options.video:
@@ -73,4 +73,3 @@ for item in res:
     elif item['guid'] == options.guid:
         smil = item['content'][0]['url']
         print(cbc.parseSmil(smil))
-
