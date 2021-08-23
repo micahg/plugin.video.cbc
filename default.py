@@ -10,7 +10,7 @@ import inputstreamhelper
 import routing
 
 from resources.lib.cbc import CBC
-from resources.lib.utils import log, getAuthorizationFile
+from resources.lib.utils import log, getAuthorizationFile, getCookieFile
 from resources.lib.livechannels import LiveChannels
 from resources.lib.liveprograms import LivePrograms
 from resources.lib.shows import Shows, CBCAuthError
@@ -65,6 +65,7 @@ def logout():
     """Remove authorization stuff."""
     log('Logging out...', True)
     os.remove(getAuthorizationFile())
+    os.remove(getCookieFile())
 
 
 @plugin.route('/smil')
