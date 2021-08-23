@@ -204,10 +204,11 @@ class CBC:
 
 
     def parseSmil(self, smil):
+        log('Micah getting "{}"'.format(smil), True)
         r = self.session.get(smil)
 
         if not r.status_code == 200:
-            log('ERROR: {} returns status of {}'.format(url, r.status_code), True)
+            log('ERROR: {} returns status of {}'.format(smil, r.status_code), True)
             return None
         saveCookies(self.session.cookies)
 

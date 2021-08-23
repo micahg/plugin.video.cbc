@@ -7,6 +7,7 @@ import xbmcplugin
 import xbmcgui
 import xbmcaddon
 import inputstreamhelper
+import routing
 
 from resources.lib.cbc import CBC
 from resources.lib.utils import log, getAuthorizationFile
@@ -15,18 +16,20 @@ from resources.lib.liveprograms import LivePrograms
 from resources.lib.shows import Shows, CBCAuthError
 
 getString = xbmcaddon.Addon().getLocalizedString
-
 LIVE_CHANNELS = getString(30004)
 LIVE_PROGRAMS = getString(30005)
 SHOWS = getString(30006)
 
+
+
 # handle logout before using argv[1] as the addon handle
+"""
 if sys.argv[1] == 'logout':
     log('Logging out... {}'.format(sys.argv[1]), True)
     os.remove(getAuthorizationFile())
     sys.exit(0)
-
-addon_handle = int(sys.argv[1])
+"""
+plugin = routing.Plugin()
 
 
 def authorize():
@@ -63,14 +66,18 @@ def play(labels, image, url):
     if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
         item.setProperty('inputstreamaddon', 'inputstream.adaptive')
         item.setProperty('inputstream.adaptive.manifest_type', 'hls')
-    xbmcplugin.setResolvedUrl(addon_handle, True, item)
+    xbmcplugin.setResolvedUrl(plugin.handle, True, item)
 
 
-def play_smil(smil, labels, image):
+# def play_smil(smil, labels, image):
+@plugin.route('/smil')
+def play_smil():
     """Play an SMIL file."""
+    log('MICAH args are {}'.format(plugin.args), True)
     cbc = CBC()
-    url = cbc.parseSmil(smil)
-    return play(labels, image, url)
+    url = cbc.parseSmil(plugin.args['url'][0])
+    labels = dict(parse_qsl(plugin.args['labels'][0]))
+    return play(labels, plugin.args['image'][0], url)
 
 
 def play_show(values):
@@ -104,9 +111,10 @@ def play_show(values):
     return play(labels, image, res['url'])
 
 
-def liveProgramsMenu():
+@plugin.route('/programs')
+def live_programs_menu():
     """Populate the menu with live programs."""
-    xbmcplugin.setContent(addon_handle, 'videos')
+    xbmcplugin.setContent(plugin.handle, 'videos')
     progs = LivePrograms()
     prog_list = progs.getLivePrograms()
     cbc = CBC()
@@ -130,16 +138,17 @@ def liveProgramsMenu():
             'image': image
         }
         url = sys.argv[0] + "?" + urlencode(values)
-        xbmcplugin.addDirectoryItem(addon_handle, url, item,False)
+        xbmcplugin.addDirectoryItem(plugin.handle, url, item,False)
 
-    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
-    xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
-    xbmcplugin.endOfDirectory(addon_handle)
+    xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
+    xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE)
+    xbmcplugin.endOfDirectory(plugin.handle)
 
 
-def liveChannelsMenu():
+@plugin.route('/channels')
+def live_channels_menu():
     """Populate the menu with live channels."""
-    xbmcplugin.setContent(addon_handle, 'videos')
+    xbmcplugin.setContent(plugin.handle, 'videos')
     chans = LiveChannels()
     chan_list = chans.getLiveChannels()
     cbc = CBC()
@@ -150,35 +159,33 @@ def liveChannelsMenu():
         item.setArt({'thumb': image, 'poster': image})
         item.setInfo(type="Video", infoLabels=labels)
         item.setProperty('IsPlayable', 'true')
-        query_values = {
-            'smil': channel['content'][0]['url'],
-            'labels': urlencode(labels),
-            'image': image
-        }
-        url = sys.argv[0] + "?" + urlencode(query_values)
-        xbmcplugin.addDirectoryItem(addon_handle, url, item, False)
-
-    xbmcplugin.endOfDirectory(addon_handle)
+        xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(play_smil,
+                                                                  url=channel['content'][0]['url'],
+                                                                  labels=urlencode(labels),
+                                                                  image=image),
+                                    item, False)
+    xbmcplugin.endOfDirectory(plugin.handle)
 
 
-def play_menu(values):
+@plugin.route('/shows')
+def play_menu():
     """Populate the menu with shows."""
     cbc = CBC()
     shows = Shows()
-    if 'smil' in values:
-        url = values['smil'][0]
+    if 'smil' in plugin.args:
+        url = plugin.args['smil'][0]
     else:
         # if there is no smil link this is the main menu of all shows, so it
         # only has show titles (eg: not season or episode titles). In this
         # situation, it is appropriate to sort by title and ignore 'The ...'
-        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
-        xbmcplugin.addSortMethod(addon_handle, xbmcplugin.SORT_METHOD_TITLE)
+        xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
+        xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE)
         url = None
 
     prog = xbmcgui.DialogProgress()
     prog.create(getString(30003))
     try:
-        show_list = shows.getShows(url, progress_callback = prog.update)
+        show_list = shows.getShows(url, progress_callback=prog.update)
     except CBCAuthError:
         log('(play_menu) auth failed. retrying', True)
         if not authorize():
@@ -186,14 +193,16 @@ def play_menu(values):
             return
         log('(play_menu) auth retry successful', True)
         try:
-            show_list = shows.getShows(url, progress_callback = prog.update)
+            show_list = shows.getShows(url, progress_callback=prog.update)
         except CBCAuthError:
             log('(play_menu) getShows failed despite successful auth retry', True)
             return
 
     # if the first episode is video, assume all are video
-    is_video = 'video' in show_list[0]
-    xbmcplugin.setContent(addon_handle, 'episodes' if is_video else 'tvshows')
+    #is_video = 'video' in show_list[0]
+    xbmcplugin.setContent(plugin.handle, 'episodes' if 'video' in show_list[0] else 'tvshows')
+
+    log('MICAH show list is {}'.format(show_list), True)
 
     prog.close()
     for show in show_list:
@@ -209,39 +218,56 @@ def play_menu(values):
         if 'duration' in show:
             item.addStreamInfo('video', {'duration':show['duration']})
         item.setArt({'thumb': image, 'poster': image})
-        values = {
-            'smil': show['url'],
-            'video': show['video'] if is_video else None,
-            'image': image
-        }
+        # values = {
+        #     'smil': show['url'],
+        #     'video': show['video'] if is_video else None,
+        #     'image': image
+        # }
+        #
+        # if not values['video']:
+        #     values['menu'] = SHOWS
+        # else:
+        #     values['labels'] = urlencode(labels)
 
-        if not values['video']:
-            values['menu'] = SHOWS
+        # plugin_url = sys.argv[0] + "?" + urlencode(values)
+        # xbmcplugin.addDirectoryItem(plugin.handle, plugin_url, item, not is_video)
+        # video = show['video'] if is_video else None
+        if is_video:
+            xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(play_smil,
+                                                                      url=show['url'],
+                                                                      labels=urlencode(labels),
+                                                                      image=image),
+                                        item, False)
         else:
-            values['labels'] = urlencode(labels)
+            xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(play_menu, smil=show['url']), item, True)
 
-        plugin_url = sys.argv[0] + "?" + urlencode(values)
-        xbmcplugin.addDirectoryItem(addon_handle, plugin_url, item, not is_video)
-
-    xbmcplugin.endOfDirectory(addon_handle)
+    xbmcplugin.endOfDirectory(plugin.handle)
 
 
+@plugin.route('/')
 def main_menu():
     """Populate the menu with the main menu items."""
-    xbmcplugin.setContent(addon_handle, 'videos')
-    for menu_item in [LIVE_CHANNELS, LIVE_PROGRAMS, SHOWS]:
-        labels = {'title': menu_item}
-        item = xbmcgui.ListItem(menu_item)
-        item.setInfo(type="Video", infoLabels=labels)
-        query_values = {'menu': menu_item}
-        xbmcplugin.addDirectoryItem(handle=addon_handle,
-                                    url=sys.argv[0] + "?" + urlencode(query_values),
-                                    listitem=item,
-                                    isFolder=True)
+    data_path = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)
+    if not os.path.exists(getAuthorizationFile()):
+        authorize()
 
-    xbmcplugin.endOfDirectory(addon_handle)
+    xbmcplugin.setContent(plugin.handle, 'videos')
+    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(live_channels_menu),
+                                xbmcgui.ListItem(LIVE_CHANNELS), True)
+    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(live_programs_menu),
+                                xbmcgui.ListItem(LIVE_PROGRAMS), True)
+    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(play_menu),
+                                xbmcgui.ListItem(SHOWS), True)
+    xbmcplugin.endOfDirectory(plugin.handle)
 
-
+# ?menu=Live%20Channels
+# ?menu=Live%20Programs
+# ?menu=Shows
+# ?image=None&menu=Shows&smil=https%3a%2f%2fapi-cbc.cloud.clearleap.com%2fcloffice%2fclient%2fweb%2fbrowse%2fe8e1db08-1e3c-4221-8b43-f50f32606ce6&video=None
+"""
+log('MICAH path is "{}"'.format(sys.argv[2]), True)
 if len(sys.argv[2]) == 0:
     # create the data folder if it doesn't exist
     data_path = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
@@ -265,3 +291,7 @@ else:
             play_menu(values)
     elif 'smil' in values:
         play_smil(values['smil'][0], dict(parse_qsl(values['labels'][0])), values['image'][0])
+"""
+
+if __name__ == '__main__':
+    plugin.run()
