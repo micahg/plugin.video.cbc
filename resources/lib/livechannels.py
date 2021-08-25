@@ -50,7 +50,7 @@ class LiveChannels:
             channel_dict = {
                 'name': channel['title'],
                 'stream': 'plugin://plugin.video.cbc/smil?' + urlencode(values),
-                'id': channel['content'][0]['cbc$callSign'],
+                'id': channel['cbc$callSign'],
                 'logo': image
             }
 
