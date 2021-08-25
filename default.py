@@ -125,7 +125,7 @@ def live_programs_menu():
         if prog['availableDate'] == 0:
             continue
 
-        labels = cbc.getLabels(prog)
+        labels = cbc.get_labels(prog)
         image = cbc.getImage(prog)
         item = xbmcgui.ListItem(labels['title'])
         item.setArt({'thumb': image, 'poster': image})
@@ -151,6 +151,30 @@ def iptv_channels():
     IPTVManager(port).send_channels()
 
 
+@plugin.route('/iptv/addall')
+def live_channels_add_all():
+    """Add all channels back to the PVR listing."""
+    log('MICAH add all', True)
+
+
+@plugin.route('/iptv/add/<station>')
+def live_channels_add(station):
+    """Add a single station."""
+    log('MICAH add {}'.format(station), True)
+
+
+@plugin.route('/iptv/remove/<station>')
+def live_channels_remove(station):
+    """Remove a station."""
+    log('MICAH remove {}'.format(station), True)
+
+
+@plugin.route('/iptv/addonly/<station>')
+def live_channels_add_only(station):
+    """Remove all but the specified station from the IPTV station list."""
+    log('MICAH add only {}'.format(station), True)
+
+
 @plugin.route('/channels')
 def live_channels_menu():
     """Populate the menu with live channels."""
@@ -159,17 +183,23 @@ def live_channels_menu():
     chan_list = chans.get_live_channels()
     cbc = CBC()
     for channel in chan_list:
-        labels = cbc.getLabels(channel)
+        labels = cbc.get_labels(channel)
+        callsign = cbc.get_callsign(channel)
+        log('MICAH channel is "{}"'.format(callsign), True)
         image = cbc.getImage(channel)
         item = xbmcgui.ListItem(labels['title'])
         item.setArt({'thumb': image, 'poster': image})
         item.setInfo(type="Video", infoLabels=labels)
         item.setProperty('IsPlayable', 'true')
-        xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(play_smil,
-                                                                  url=channel['content'][0]['url'],
-                                                                  labels=urlencode(labels),
-                                                                  image=image),
-                                    item, False)
+        item.addContextMenuItems([
+            (getString(30014), 'RunPlugin({})'.format(plugin.url_for(live_channels_add_all))),
+            (getString(30015), 'RunPlugin({})'.format(plugin.url_for(live_channels_add, callsign))),
+            (getString(30016), 'RunPlugin({})'.format(plugin.url_for(live_channels_remove, callsign))),
+            (getString(30017), 'RunPlugin({})'.format(plugin.url_for(live_channels_add_only, callsign))),
+        ])
+        xbmcplugin.addDirectoryItem(plugin.handle,
+                                    plugin.url_for(play_smil, url=channel['content'][0]['url'],
+                                                   labels=urlencode(labels), image=image), item, False)
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
@@ -211,7 +241,7 @@ def play_menu():
         if show['url'] is None:
             continue
         is_video = show['video'] if 'video' in show else False
-        labels = cbc.getLabels(show)
+        labels = cbc.get_labels(show)
         image = show['image'] if 'image' in show else None
         item = xbmcgui.ListItem(labels['title'])
 

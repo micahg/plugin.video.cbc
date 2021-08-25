@@ -40,7 +40,7 @@ class LiveChannels:
         channels = self.get_live_channels()
         result = []
         for channel in channels:
-            labels = cbc.getLabels(channel)
+            labels = cbc.get_labels(channel)
             image = cbc.getImage(channel)
             values = {
                 'url': channel['content'][0]['url'],
@@ -50,7 +50,7 @@ class LiveChannels:
             channel_dict = {
                 'name': channel['title'],
                 'stream': 'plugin://plugin.video.cbc/smil?' + urlencode(values),
-                'id': channel['cbc$callSign'],
+                'id': channel['content'][0]['cbc$callSign'],
                 'logo': image
             }
 

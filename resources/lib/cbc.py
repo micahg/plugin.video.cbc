@@ -4,6 +4,8 @@ import xml.etree.ElementTree as ET
 
 from .utils import saveCookies, loadCookies, saveAuthorization, log
 
+CALLSIGN = 'cbc$callSign'
+
 class CBC:
 
     def __init__(self):
@@ -157,8 +159,12 @@ class CBC:
             return item['cbc$featureImage']
         return None
 
+    @staticmethod
+    def get_callsign(item):
+        """Get the callsign for a channel."""
+        return item[CALLSIGN] if CALLSIGN in item else None
 
-    def getLabels(self, item):
+    def get_labels(self, item):
         labels = {
             'studio': 'Canadian Broadcasting Corporation',
             'country': 'Canada'
