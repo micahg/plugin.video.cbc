@@ -20,7 +20,8 @@ parser.add_option('-s', '--shows', action='store_true', dest='shows')
 from resources.lib.livechannels import *
 from resources.lib.liveprograms import *
 from resources.lib.shows import *
-from resources.lib.cbc import *
+from resources.lib.cbc import CBC
+
 
 def progress(x):
     print(x)

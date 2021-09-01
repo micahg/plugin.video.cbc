@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 
 import requests
 
-from resources.lib.utils import saveCookies, loadCookies, log
+from resources.lib.utils import save_cookies, loadCookies, log, get_iptv_channels_file
 from resources.lib.cbc import CBC
 
 LIST_URL = 'https://tpfeed.cbc.ca/f/ExhSPC/t_t3UKJR6MAT?pretty=true&sort=pubDate%7Cdesc'
@@ -29,7 +29,7 @@ class LiveChannels:
         if not resp.status_code == 200:
             log('ERROR: {} returns status of {}'.format(LIST_URL, resp.status_code), True)
             return None
-        saveCookies(self.session.cookies)
+        save_cookies(self.session.cookies)
 
         items = json.loads(resp.content)[LIST_ELEMENT]
         return items
@@ -60,3 +60,35 @@ class LiveChannels:
             result.append(channel_dict)
 
         return result
+
+    @staticmethod
+    def remove_iptv_channel(channel):
+        """Add all live channels for IPTV."""
+        chan_file = get_iptv_channels_file()
+        try:
+            with open(get_iptv_channels_file(), 'r') as chan_file:
+                blocked = json.load(chan_file)
+        except FileNotFoundError:
+            blocked = []
+
+        if channel not in blocked:
+            blocked.append(channel)
+
+        with open(get_iptv_channels_file(), 'w') as chan_file:
+            json.dump(blocked, chan_file)
+
+    @staticmethod
+    def add_iptv_channel(channel):
+        """Add all live channels for IPTV."""
+        chan_file = get_iptv_channels_file()
+        try:
+            with open(get_iptv_channels_file(), 'r') as chan_file:
+                blocked = json.load(chan_file)
+        except FileNotFoundError:
+            return
+
+        if channel in blocked:
+            blocked.remove(channel)
+
+        with open(get_iptv_channels_file(), 'w') as chan_file:
+            json.dump(blocked, chan_file)

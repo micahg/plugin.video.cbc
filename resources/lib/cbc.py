@@ -2,7 +2,7 @@ import requests, uuid, urllib.request, urllib.parse, urllib.error, json
 from xml.dom.minidom import *
 import xml.etree.ElementTree as ET
 
-from .utils import saveCookies, loadCookies, saveAuthorization, log
+from .utils import save_cookies, loadCookies, saveAuthorization, log
 
 CALLSIGN = 'cbc$callSign'
 
@@ -77,7 +77,7 @@ class CBC:
             auth['token'] = token
 
         saveAuthorization(auth)
-        saveCookies(self.session.cookies)
+        save_cookies(self.session.cookies)
 
         return True
 
@@ -87,7 +87,7 @@ class CBC:
         if not r.status_code == 200:
             log('ERROR: {} returns status of {}'.format(url, r.status_code), True)
             return None
-        saveCookies(self.session.cookies)
+        save_cookies(self.session.cookies)
         # Parse the authorization response
         dom = parseString(r.content)
         status = dom.getElementsByTagName('status')[0].firstChild.nodeValue
@@ -215,7 +215,7 @@ class CBC:
         if not r.status_code == 200:
             log('ERROR: {} returns status of {}'.format(smil, r.status_code), True)
             return None
-        saveCookies(self.session.cookies)
+        save_cookies(self.session.cookies)
 
         dom = parseString(r.content)
         seq = dom.getElementsByTagName('seq')[0]

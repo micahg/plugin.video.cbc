@@ -10,7 +10,7 @@ import inputstreamhelper
 import routing
 
 from resources.lib.cbc import CBC
-from resources.lib.utils import log, getAuthorizationFile, getCookieFile
+from resources.lib.utils import log, getAuthorizationFile, get_cookie_file, get_iptv_channels_file
 from resources.lib.livechannels import LiveChannels
 from resources.lib.liveprograms import LivePrograms
 from resources.lib.shows import Shows, CBCAuthError
@@ -66,7 +66,7 @@ def logout():
     """Remove authorization stuff."""
     log('Logging out...', True)
     os.remove(getAuthorizationFile())
-    os.remove(getCookieFile())
+    os.remove(get_cookie_file())
 
 
 @plugin.route('/smil')
@@ -137,7 +137,7 @@ def live_programs_menu():
             'image': image
         }
         url = sys.argv[0] + "?" + urlencode(values)
-        xbmcplugin.addDirectoryItem(plugin.handle, url, item,False)
+        xbmcplugin.addDirectoryItem(plugin.handle, url, item, False)
 
     xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
     xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE)
@@ -154,19 +154,21 @@ def iptv_channels():
 @plugin.route('/iptv/addall')
 def live_channels_add_all():
     """Add all channels back to the PVR listing."""
-    log('MICAH add all', True)
+    os.remove(get_iptv_channels_file())
 
 
 @plugin.route('/iptv/add/<station>')
 def live_channels_add(station):
     """Add a single station."""
     log('MICAH add {}'.format(station), True)
+    LiveChannels.add_iptv_channel(station)
 
 
 @plugin.route('/iptv/remove/<station>')
 def live_channels_remove(station):
     """Remove a station."""
     log('MICAH remove {}'.format(station), True)
+    LiveChannels.remove_iptv_channel(station)
 
 
 @plugin.route('/iptv/addonly/<station>')
@@ -185,7 +187,6 @@ def live_channels_menu():
     for channel in chan_list:
         labels = cbc.get_labels(channel)
         callsign = cbc.get_callsign(channel)
-        log('MICAH channel is "{}"'.format(callsign), True)
         image = cbc.getImage(channel)
         item = xbmcgui.ListItem(labels['title'])
         item.setArt({'thumb': image, 'poster': image})
@@ -248,7 +249,7 @@ def play_menu():
         item.setInfo(type="Video", infoLabels=labels)
         item.setProperty('IsPlayable', 'true' if is_video else 'false')
         if 'duration' in show:
-            item.addStreamInfo('video', {'duration':show['duration']})
+            item.addStreamInfo('video', {'duration': show['duration']})
         item.setArt({'thumb': image, 'poster': image})
 
         plugin_url = plugin.url_for(play_menu, smil=show['url'])
