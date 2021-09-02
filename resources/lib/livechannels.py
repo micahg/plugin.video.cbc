@@ -62,14 +62,19 @@ class LiveChannels:
         return result
 
     @staticmethod
-    def remove_iptv_channel(channel):
-        """Add all live channels for IPTV."""
+    def get_blocked_iptv_channels():
+        """Get the list of blocked channels."""
         chan_file = get_iptv_channels_file()
         try:
             with open(get_iptv_channels_file(), 'r') as chan_file:
-                blocked = json.load(chan_file)
+                return json.load(chan_file)
         except FileNotFoundError:
-            blocked = []
+            return []
+
+    @staticmethod
+    def remove_iptv_channel(channel):
+        """Add all live channels for IPTV."""
+        blocked = LiveChannels.get_blocked_iptv_channels()
 
         if channel not in blocked:
             blocked.append(channel)
@@ -80,11 +85,8 @@ class LiveChannels:
     @staticmethod
     def add_iptv_channel(channel):
         """Add all live channels for IPTV."""
-        chan_file = get_iptv_channels_file()
-        try:
-            with open(get_iptv_channels_file(), 'r') as chan_file:
-                blocked = json.load(chan_file)
-        except FileNotFoundError:
+        blocked = LiveChannels.get_blocked_iptv_channels()
+        if len(blocked) == 0:
             return
 
         if channel in blocked:
