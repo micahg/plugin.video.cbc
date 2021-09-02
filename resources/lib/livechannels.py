@@ -38,8 +38,15 @@ class LiveChannels:
         """Get the channels in a IPTV Manager compatible list."""
         cbc = CBC()
         channels = self.get_live_channels()
+        blocked = self.get_blocked_iptv_channels()
         result = []
         for channel in channels:
+            callsign = CBC.get_callsign(channel)
+
+            # if the user has omitted this from the list of their channels, don't populate it
+            if callsign in blocked:
+                continue
+
             labels = cbc.get_labels(channel)
             image = cbc.getImage(channel)
             values = {
@@ -50,7 +57,7 @@ class LiveChannels:
             channel_dict = {
                 'name': channel['title'],
                 'stream': 'plugin://plugin.video.cbc/smil?' + urlencode(values),
-                'id': channel['cbc$callSign'],
+                'id': callsign,
                 'logo': image
             }
 
