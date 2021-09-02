@@ -175,7 +175,7 @@ def live_channels_remove(station):
 def live_channels_add_only(station):
     """Remove all but the specified station from the IPTV station list."""
     log('MICAH add only {}'.format(station), True)
-
+    LiveChannels.add_only_iptv_channel(station)
 
 @plugin.route('/channels')
 def live_channels_menu():

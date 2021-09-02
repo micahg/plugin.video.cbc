@@ -92,3 +92,19 @@ class LiveChannels:
 
         with open(get_iptv_channels_file(), 'w') as chan_file:
             json.dump(blocked, chan_file)
+
+    @staticmethod
+    def add_only_iptv_channel(channel):
+        """
+        Add only a single specified channel to the list of IPTV channels.
+
+        This method gets the list of all channels, and removes the only one the user wants, leaving the rest as an
+        extensive filter.
+        """
+        blocked = [CBC.get_callsign(chan) for chan in LiveChannels().get_live_channels()]
+
+        if channel in blocked:
+            blocked.remove(channel)
+
+        with open(get_iptv_channels_file(), 'w') as chan_file:
+            json.dump(blocked, chan_file)
