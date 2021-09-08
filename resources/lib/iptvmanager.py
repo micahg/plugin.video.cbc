@@ -6,6 +6,7 @@ import json
 import socket
 
 from resources.lib.livechannels import LiveChannels
+from resources.lib.epg import get_iptv_epg
 
 
 class IPTVManager:
@@ -34,8 +35,7 @@ class IPTVManager:
         """Return JSON-STREAMS formatted information to IPTV Manager."""
         return dict(version=1, streams=LiveChannels().get_iptv_channels())
 
-    # @via_socket
-    # def send_epg(self):  # pylint: disable=no-method-argument,no-self-use
-    #     """ Return JSON-EPG formatted information to IPTV Manager. """
-    #     from redbull import RedBullTV
-    #     return dict(version=1, epg=RedBullTV().get_iptv_epg())
+    @via_socket
+    def send_epg(self):  # pylint: disable=no-method-argument,no-self-use
+        """Return JSON-EPG formatted information to IPTV Manager."""
+        return dict(version=1, epg=get_iptv_epg())

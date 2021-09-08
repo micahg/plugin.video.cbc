@@ -11,5 +11,6 @@
     <setting label="30021" type="bool" id="iptv.enabled" default="true" visible="System.HasAddon(service.iptv.manager)" />
     <setting label="30022" type="action" action="Addon.OpenSettings(service.iptv.manager)" enable="eq(-1,true)" option="close" visible="System.HasAddon(service.iptv.manager)" subsetting="true"/>
     <setting id="iptv.channels_uri" default="plugin://plugin.video.cbc/iptv/channels" visible="false"/>
+    <setting id="iptv.epg_uri" default="plugin://plugin.video.cbc/iptv/epg" visible="false"/>
   </category>
 </settings>
