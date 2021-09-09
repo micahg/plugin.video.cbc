@@ -1,5 +1,5 @@
 """Electronic program guide module."""
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from bs4 import BeautifulSoup
@@ -20,11 +20,8 @@ def get_iptv_epg():
     channels = live.get_live_channels()
     blocked = live.get_blocked_iptv_channels()
     unblocked = []
-    # newsnetwork = False
     for channel in channels:
         callsign = CBC.get_callsign(channel)
-        # if callsign == 'NN':
-        #     newsnetwork = True
         if callsign not in blocked:
             unblocked.append(channel)
     channel_map = map_channel_ids(unblocked)
@@ -35,24 +32,18 @@ def get_iptv_epg():
         if callsign not in epg_data:
             epg_data[callsign] = []
 
-        programs = get_channel_data(datetime.now(), guide_id, callsign == 'NN')
+        newsnetwork = callsign == 'NN'
+        dttm = datetime.now()
+        programs = get_channel_data(dttm, guide_id, newsnetwork)
+        epg_data[callsign].extend(programs)
+        dttm = dttm + timedelta(days=1)
+        programs = get_channel_data(dttm, guide_id, newsnetwork)
+        epg_data[callsign].extend(programs)
+        dttm = dttm + timedelta(days=1)
+        programs = get_channel_data(dttm, guide_id, newsnetwork)
         epg_data[callsign].extend(programs)
 
     return epg_data
-
-
-def call_guide_url(dttm, location=None, newsnetwork=False):
-    """Call the guide URL and return the response body."""
-    date_str = dttm.strftime('%Y/%m/%d')
-    url = (NEWSNET_URL_FMT if newsnetwork else GUIDE_URL_FMT).format(date_str)
-    cookies = {}
-    if location is not None:
-        cookies['pgTvLocation'] = location
-    resp = requests.get(url, cookies=cookies)
-    if resp.status_code != 200:
-        log('{} returns status of {}'.format(url, resp.status_code), True)
-        return None
-    return resp.content
 
 
 def map_channel_ids(unblocked):
@@ -69,6 +60,20 @@ def map_channel_ids(unblocked):
             if unidecode(channel['title']).lower() == unidecode(title).lower():
                 channel_map[CBC.get_callsign(channel)] = value
     return channel_map
+
+
+def call_guide_url(dttm, location=None, newsnetwork=False):
+    """Call the guide URL and return the response body."""
+    date_str = dttm.strftime('%Y/%m/%d')
+    url = (NEWSNET_URL_FMT if newsnetwork else GUIDE_URL_FMT).format(date_str)
+    cookies = {}
+    if location is not None:
+        cookies['pgTvLocation'] = location
+    resp = requests.get(url, cookies=cookies)
+    if resp.status_code != 200:
+        log('{} returns status of {}'.format(url, resp.status_code), True)
+        return None
+    return resp.content
 
 
 def get_channel_data(dttm, channel, newsnetwork=False):
