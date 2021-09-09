@@ -3,6 +3,7 @@ from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
+from unidecode import unidecode
 
 from resources.lib.utils import log
 from resources.lib.cbc import CBC
@@ -60,12 +61,12 @@ def map_channel_ids(unblocked):
     soup = BeautifulSoup(data, features="html.parser")
     select = soup.find('select', id="selectlocation-tv")
     options = select.find_all('option')
-    channel_map = { 'NN': None }
+    channel_map = {'NN': None}
     for option in options:
         title = option.get_text()
         value = option['value']
         for channel in unblocked:
-            if channel['title'] == title:
+            if unidecode(channel['title']).lower() == unidecode(title).lower():
                 channel_map[CBC.get_callsign(channel)] = value
     return channel_map
 
