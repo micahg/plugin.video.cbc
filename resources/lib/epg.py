@@ -1,5 +1,6 @@
 """Electronic program guide module."""
 from datetime import datetime, timedelta
+from concurrent import futures
 
 import requests
 from bs4 import BeautifulSoup
@@ -26,23 +27,28 @@ def get_iptv_epg():
             unblocked.append(channel)
     channel_map = map_channel_ids(unblocked)
     epg_data = {}
-    for callsign, guide_id in channel_map.items():
 
-        # add empty array of programs
-        if callsign not in epg_data:
+    future_to_callsign = {}
+    log('Starting EPG update')
+    with futures.ThreadPoolExecutor(max_workers=20) as executor:
+        for callsign, guide_id in channel_map.items():
+
+            # determine if we're dealing with news network
+            newsnetwork = callsign == 'NN'
+
+            # add empty array of programs
             epg_data[callsign] = []
 
-        newsnetwork = callsign == 'NN'
-        dttm = datetime.now()
-        programs = get_channel_data(dttm, guide_id, newsnetwork)
-        epg_data[callsign].extend(programs)
-        dttm = dttm + timedelta(days=1)
-        programs = get_channel_data(dttm, guide_id, newsnetwork)
-        epg_data[callsign].extend(programs)
-        dttm = dttm + timedelta(days=1)
-        programs = get_channel_data(dttm, guide_id, newsnetwork)
-        epg_data[callsign].extend(programs)
+            # submit three concurrent requests for a days guide data
+            for day_offset in [0, 1, 2]:
+                dttm = datetime.now() + timedelta(days=day_offset)
+                future = executor.submit(get_channel_data, dttm, guide_id, newsnetwork)
+                future_to_callsign[future] = callsign
 
+        for future in futures.as_completed(future_to_callsign):
+            callsign = future_to_callsign[future]
+            epg_data[callsign].extend(future.result())
+    log('EPG update complete.')
     return epg_data
 
 

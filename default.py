@@ -147,7 +147,6 @@ def live_programs_menu():
 @plugin.route('/iptv/channels')
 def iptv_channels():
     """Send a list of IPTV channels."""
-    log('MICAH in default trying to get channels')
     port = int(plugin.args.get('port')[0])
     IPTVManager(port).send_channels()
 
@@ -155,7 +154,6 @@ def iptv_channels():
 @plugin.route('/iptv/epg')
 def iptv_epg():
     """Get EPG information for IPTV manager."""
-    log('MICAH in defult trying to send epg.', True)
     port = int(plugin.args.get('port')[0])
     IPTVManager(port).send_epg()
 
