@@ -230,5 +230,5 @@ class CBC:
         sess = requests.Session()
         cookies = loadCookies()
         if cookies is not None:
-            sess.cookies = session_cookies
+            sess.cookies = cookies
         return sess

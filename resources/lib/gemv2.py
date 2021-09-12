@@ -1,6 +1,6 @@
 """Module for the V2 Gem API."""
+import json
 
-from resources.lib.utils import log
 from resources.lib.cbc import CBC
 
 LAYOUT_MAP = {
@@ -16,4 +16,4 @@ class GemV2:
         """Get a Gem V2 layout by name."""
         url = LAYOUT_MAP[name]
         resp = CBC.get_session().get(url)
-        log(resp.content)
+        json.loads(resp.content)
