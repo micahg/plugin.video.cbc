@@ -18,8 +18,12 @@ from resources.lib.iptvmanager import IPTVManager
 
 getString = xbmcaddon.Addon().getLocalizedString
 LIVE_CHANNELS = getString(30004)
-LIVE_PROGRAMS = getString(30005)
+FEATURED = getString(30005)
 SHOWS = getString(30006)
+DOCUMENTARIES = getString(30024)
+KIDS = getString(30025)
+SEARCH = getString(30026)
+
 
 plugin = routing.Plugin()
 
@@ -208,6 +212,27 @@ def live_channels_menu():
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
+@plugin.route('/featured')
+def featured_menu():
+    """Populate the menu with featured items."""
+    xbmcplugin.setContent(plugin.handle, 'videos')
+    
+    xbmcplugin.endOfDirectory(plugin.handle)
+    return
+
+
+@plugin.route('/documentaries')
+def documentaries_menu():
+    """Populate the menu with documentary items."""
+    return
+
+
+@plugin.route('/kids')
+def kids_menu():
+    """Populate the menu with kids items."""
+    return
+
+
 @plugin.route('/shows')
 def play_menu():
     """Populate the menu with shows."""
@@ -274,12 +299,12 @@ def main_menu():
         authorize()
 
     xbmcplugin.setContent(plugin.handle, 'videos')
-    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(live_channels_menu),
-                                xbmcgui.ListItem(LIVE_CHANNELS), True)
-    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(live_programs_menu),
-                                xbmcgui.ListItem(LIVE_PROGRAMS), True)
+    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(featured_menu),
+                                xbmcgui.ListItem(FEATURED), True)
     xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(play_menu),
                                 xbmcgui.ListItem(SHOWS), True)
+    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(live_channels_menu),
+                                xbmcgui.ListItem(LIVE_CHANNELS), True)
     xbmcplugin.endOfDirectory(plugin.handle)
 
 

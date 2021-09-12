@@ -224,3 +224,11 @@ class CBC:
         title = video.attributes['title'].value
         abstract = video.attributes['abstract'].value
         return src
+
+    def get_session():
+        """Get a requests session object with CBC cookies."""
+        sess = requests.Session()
+        cookies = loadCookies()
+        if cookies is not None:
+            sess.cookies = session_cookies
+        return sess
