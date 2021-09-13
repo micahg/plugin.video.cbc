@@ -260,7 +260,6 @@ def layout_menu(layout):
             item = xbmcgui.ListItem(shelf['title'])
             shelf_items = json.dumps(shelf['items'])
             url = plugin.url_for(gem_shelf_menu, query=shelf_items)
-            url = plugin.url_for(main_menu)
             xbmcplugin.addDirectoryItem(handle, url, item, False)
     log('MICAH ENDING DIRECTORY')
     xbmcplugin.endOfDirectory(handle)
