@@ -1,5 +1,6 @@
 """Default plugin module."""
 import os
+import json
 from urllib.parse import urlencode, parse_qs, parse_qsl
 
 import xbmc
@@ -13,6 +14,7 @@ from resources.lib.cbc import CBC
 from resources.lib.utils import log, getAuthorizationFile, get_cookie_file, get_iptv_channels_file
 from resources.lib.livechannels import LiveChannels
 from resources.lib.liveprograms import LivePrograms
+from resources.lib.gemv2 import GemV2
 from resources.lib.shows import Shows, CBCAuthError
 from resources.lib.iptvmanager import IPTVManager
 
@@ -129,7 +131,7 @@ def live_programs_menu():
         if prog['availableDate'] == 0:
             continue
 
-        labels = cbc.get_labels(prog)
+        labels = CBC.get_labels(prog)
         image = cbc.getImage(prog)
         item = xbmcgui.ListItem(labels['title'])
         item.setArt({'thumb': image, 'poster': image})
@@ -193,7 +195,7 @@ def live_channels_menu():
     chan_list = chans.get_live_channels()
     cbc = CBC()
     for channel in chan_list:
-        labels = cbc.get_labels(channel)
+        labels = CBC.get_labels(channel)
         callsign = cbc.get_callsign(channel)
         image = cbc.getImage(channel)
         item = xbmcgui.ListItem(labels['title'])
@@ -212,13 +214,56 @@ def live_channels_menu():
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
-@plugin.route('/featured')
-def featured_menu():
-    """Populate the menu with featured items."""
+@plugin.route('/gem/show/<show_id>')
+def gem_shelf_show_menu(show_id):
+    """Create a menu for a shelfs items."""
     xbmcplugin.setContent(plugin.handle, 'videos')
-    
+    show_layout = GemV2.get_show_layout_by_id(show_id)
+    # for shelf_item in items:
+    #     item = xbmcgui.ListItem(shelf_item['title'])
+    #     item.setInfo(type="Video", infoLabels=CBC.get_labels(shelf_item))
+    #     item.setArt({'thumb': shelf_item['image'], 'poster': shelf_item['image']})
+    #     xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(gem_shelf_menu, 'oh no'), item, False)
     xbmcplugin.endOfDirectory(plugin.handle)
-    return
+
+
+@plugin.route('/gem/shelf')
+def gem_shelf_menu():
+    """Create a menu item for each shelf."""
+    handle = plugin.handle
+    log('MICAH plugin handle is {}'.format(handle))
+    log('MICAH base url is {}'.format(plugin.base_url))
+    log('MICAH ID IS "{}"'.format(sys.argv[1]))
+    xbmcplugin.setContent(handle, 'videos')
+    json_str = plugin.args['query'][0]
+    shelf_items = json.loads(json_str)
+    for shelf_item in shelf_items:
+        log('MICAH shelf ITEM IS {}'.format(shelf_item))
+        item = xbmcgui.ListItem(shelf_item['title'])
+        image = shelf_item['image'].replace('(Size)', '224')
+        item.setArt({'thumb': image, 'poster': image})
+        xbmcplugin.addDirectoryItem(handle, plugin.url_for(gem_shelf_show_menu, shelf_item['id']), item, False)
+    xbmcplugin.endOfDirectory(handle)
+    xbmcplugin.endOfDirectory(handle)
+
+
+@plugin.route('/gem/layout/<layout>')
+def layout_menu(layout):
+    """Populate the menu with featured items."""
+    handle = plugin.handle
+    log('MICAH plugin handle is {}'.format(handle))
+
+    xbmcplugin.setContent(handle, 'videos')
+    layout = GemV2.get_layout(layout)
+    if 'shelves' in layout:
+        for shelf in layout['shelves']:
+            item = xbmcgui.ListItem(shelf['title'])
+            shelf_items = json.dumps(shelf['items'])
+            url = plugin.url_for(gem_shelf_menu, query=shelf_items)
+            url = plugin.url_for(main_menu)
+            xbmcplugin.addDirectoryItem(handle, url, item, False)
+    log('MICAH ENDING DIRECTORY')
+    xbmcplugin.endOfDirectory(handle)
 
 
 @plugin.route('/documentaries')
@@ -236,7 +281,6 @@ def kids_menu():
 @plugin.route('/shows')
 def play_menu():
     """Populate the menu with shows."""
-    cbc = CBC()
     shows = Shows()
     if 'smil' in plugin.args:
         url = plugin.args['smil'][0]
@@ -271,7 +315,7 @@ def play_menu():
         if show['url'] is None:
             continue
         is_video = show['video'] if 'video' in show else False
-        labels = cbc.get_labels(show)
+        labels = CBC.get_labels(show)
         image = show['image'] if 'image' in show else None
         item = xbmcgui.ListItem(labels['title'])
 
@@ -299,7 +343,7 @@ def main_menu():
         authorize()
 
     xbmcplugin.setContent(plugin.handle, 'videos')
-    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(featured_menu),
+    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(layout_menu, 'featured'),
                                 xbmcgui.ListItem(FEATURED), True)
     xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(play_menu),
                                 xbmcgui.ListItem(SHOWS), True)

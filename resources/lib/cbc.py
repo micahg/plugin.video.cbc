@@ -164,7 +164,9 @@ class CBC:
         """Get the callsign for a channel."""
         return item[CALLSIGN] if CALLSIGN in item else None
 
-    def get_labels(self, item):
+    @staticmethod
+    def get_labels(item):
+        """Get labels for a CBC item."""
         labels = {
             'studio': 'Canadian Broadcasting Corporation',
             'country': 'Canada'
