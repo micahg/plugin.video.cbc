@@ -219,11 +219,17 @@ def gem_shelf_show_menu(show_id):
     """Create a menu for a shelfs items."""
     xbmcplugin.setContent(plugin.handle, 'videos')
     show_layout = GemV2.get_show_layout_by_id(show_id)
-    # for shelf_item in items:
-    #     item = xbmcgui.ListItem(shelf_item['title'])
-    #     item.setInfo(type="Video", infoLabels=CBC.get_labels(shelf_item))
-    #     item.setArt({'thumb': shelf_item['image'], 'poster': shelf_item['image']})
-    #     xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(gem_shelf_menu, 'oh no'), item, False)
+    for season in show_layout['seasons']:
+        item = xbmcgui.ListItem(season['title'])
+        item.setInfo(type="Video", infoLabels=CBC.get_labels(season))
+        image = season['image'].replace('(Size)', '224')
+        item.setArt({'thumb': image, 'poster': image})
+        """
+        MICAH MICAH MICAH
+        FIX THIS URL FOR IT SHOULDN"T GO BACK TO gem_shelf_menu
+        Also, you'll need to pass the general show information through to the season.
+        """
+        xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(gem_shelf_menu), item, True)
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
