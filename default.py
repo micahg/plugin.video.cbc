@@ -231,19 +231,15 @@ def gem_shelf_show_menu(show_id):
 def gem_shelf_menu():
     """Create a menu item for each shelf."""
     handle = plugin.handle
-    log('MICAH plugin handle is {}'.format(handle))
-    log('MICAH base url is {}'.format(plugin.base_url))
-    log('MICAH ID IS "{}"'.format(sys.argv[1]))
     xbmcplugin.setContent(handle, 'videos')
     json_str = plugin.args['query'][0]
     shelf_items = json.loads(json_str)
     for shelf_item in shelf_items:
-        log('MICAH shelf ITEM IS {}'.format(shelf_item))
         item = xbmcgui.ListItem(shelf_item['title'])
         image = shelf_item['image'].replace('(Size)', '224')
         item.setArt({'thumb': image, 'poster': image})
-        xbmcplugin.addDirectoryItem(handle, plugin.url_for(gem_shelf_show_menu, shelf_item['id']), item, False)
-    xbmcplugin.endOfDirectory(handle)
+        url = plugin.url_for(gem_shelf_show_menu, shelf_item['id'])
+        xbmcplugin.addDirectoryItem(handle, url, item, True)
     xbmcplugin.endOfDirectory(handle)
 
 
@@ -260,8 +256,7 @@ def layout_menu(layout):
             item = xbmcgui.ListItem(shelf['title'])
             shelf_items = json.dumps(shelf['items'])
             url = plugin.url_for(gem_shelf_menu, query=shelf_items)
-            xbmcplugin.addDirectoryItem(handle, url, item, False)
-    log('MICAH ENDING DIRECTORY')
+            xbmcplugin.addDirectoryItem(handle, url, item, True)
     xbmcplugin.endOfDirectory(handle)
 
 
