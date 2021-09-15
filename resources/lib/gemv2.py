@@ -4,7 +4,10 @@ import json
 from resources.lib.cbc import CBC
 
 LAYOUT_MAP = {
-    'featured': 'https://services.radio-canada.ca/ott/cbc-api/v2/home'
+    'featured': 'https://services.radio-canada.ca/ott/cbc-api/v2/home',
+    'shows': 'https://services.radio-canada.ca/ott/cbc-api/v2/hubs/shows',
+    'documentaries': 'https://services.radio-canada.ca/ott/cbc-api/v2/hubs/documentaries',
+    'kids': 'https://services.radio-canada.ca/ott/cbc-api/v2/hubs/kids'
 }
 SHOW_BY_ID = 'https://services.radio-canada.ca/ott/cbc-api/v2/shows/{}'
 

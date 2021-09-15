@@ -21,10 +21,12 @@ from resources.lib.iptvmanager import IPTVManager
 
 getString = xbmcaddon.Addon().getLocalizedString
 LIVE_CHANNELS = getString(30004)
-FEATURED = getString(30005)
-SHOWS = getString(30006)
-DOCUMENTARIES = getString(30024)
-KIDS = getString(30025)
+GEMS = {
+    'featured': getString(30005),
+    'shows': getString(30006),
+    'documentaries': getString(30024),
+    'kids': getString(30025)
+}
 SEARCH = getString(30026)
 
 
@@ -387,14 +389,12 @@ def main_menu():
     if not os.path.exists(getAuthorizationFile()):
         authorize()
 
-    xbmcplugin.setContent(plugin.handle, 'videos')
-    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(layout_menu, 'featured'),
-                                xbmcgui.ListItem(FEATURED), True)
-    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(play_menu),
-                                xbmcgui.ListItem(SHOWS), True)
-    xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(live_channels_menu),
-                                xbmcgui.ListItem(LIVE_CHANNELS), True)
-    xbmcplugin.endOfDirectory(plugin.handle)
+    handle = plugin.handle
+    xbmcplugin.setContent(handle, 'videos')
+    for key, value in GEMS.items():
+        xbmcplugin.addDirectoryItem(handle, plugin.url_for(layout_menu, key), xbmcgui.ListItem(value), True)
+    xbmcplugin.addDirectoryItem(handle, plugin.url_for(live_channels_menu), xbmcgui.ListItem(LIVE_CHANNELS), True)
+    xbmcplugin.endOfDirectory(handle)
 
 
 if __name__ == '__main__':
