@@ -232,6 +232,15 @@ def layout_menu(layout):
     handle = plugin.handle
     xbmcplugin.setContent(handle, 'videos')
     layout = GemV2.get_layout(layout)
+    if 'categories' in layout:
+        for category in layout['categories']:
+            item = xbmcgui.ListItem(category['title'])
+            """
+            MICAH MICAH MICAH PICK IT UP HERE HANDLE CATEGORIES PROERLY
+            """
+            shelf_items = json.dumps({})
+            url = plugin.url_for(gem_shelf_menu, query=shelf_items)
+            xbmcplugin.addDirectoryItem(handle, url, item, True)
     if 'shelves' in layout:
         for shelf in layout['shelves']:
             item = xbmcgui.ListItem(shelf['title'])
