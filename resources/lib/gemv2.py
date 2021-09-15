@@ -25,3 +25,9 @@ class GemV2:
         url = SHOW_BY_ID.format(show_id)
         resp = CBC.get_session().get(url)
         return json.loads(resp.content)
+
+    @staticmethod
+    def get_episode(url):
+        """Get a Gem V2 episode by URL."""
+        resp = CBC.get_session().get(url)
+        return json.loads(resp.content)

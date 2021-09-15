@@ -1,6 +1,7 @@
 """Default plugin module."""
 import os
 import json
+import copy
 from urllib.parse import urlencode, parse_qs, parse_qsl
 
 import xbmc
@@ -214,22 +215,66 @@ def live_channels_menu():
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
+@plugin.route('/gem/show/episode')
+def gem_episode():
+    """Play an episode."""
+    json_str = plugin.args['query'][0]
+    episode = json.loads(json_str)
+    log('MICAH episode is {}'.format(episode))
+    resp = GemV2().get_episode(episode['url'])
+    log('MICAH response is {}'.format(resp))
+    # helper = inputstreamhelper.Helper('hls')
+    # helper.check_inputstream()
+    url = resp['url']
+    log('MICAH playing "{}"'.format(url))
+    item = xbmcgui.ListItem("Title", path=url)
+    labels = {
+        'title': "title",
+        'studio': 'Canadian Broadcasting Corporation',
+        'country': 'Canada'
+    }
+    item.setInfo(type="Video", infoLabels=labels)
+    item.setProperty('inputstream', 'inputstream.adaptive')
+    item.setProperty('inputstream.adaptive.manifest_type', 'hls')
+    xbmcplugin.setResolvedUrl(plugin.handle, True, item)
+
+@plugin.route('/gem/show/season')
+def gem_show_season():
+    """Create a menu for a show season."""
+    xbmcplugin.setContent(plugin.handle, 'videos')
+    json_str = plugin.args['query'][0]
+    # remember show['season'] is season details but there is general show info in show as well
+    show = json.loads(json_str)
+    for episode in show['season']['assets']:
+        item = xbmcgui.ListItem(episode['title'])
+        image = episode['image'].replace('(Size)', '224')
+        item.setArt({'thumb': image, 'poster': image})
+        item.setProperty('IsPlayable', 'true')
+        labels = {
+            'title': "title",
+            'studio': 'Canadian Broadcasting Corporation',
+            'country': 'Canada'
+        }
+        item.setInfo(type="Video", infoLabels=labels)
+        episode_info = {'url': episode['playSession']['url']}
+        url = plugin.url_for(gem_episode, query=json.dumps(episode_info))
+        xbmcplugin.addDirectoryItem(plugin.handle, url, item, False)
+    xbmcplugin.endOfDirectory(plugin.handle)
+
+
 @plugin.route('/gem/show/<show_id>')
 def gem_shelf_show_menu(show_id):
     """Create a menu for a shelfs items."""
     xbmcplugin.setContent(plugin.handle, 'videos')
     show_layout = GemV2.get_show_layout_by_id(show_id)
+    show = {k: v for (k, v) in show_layout.items() if k not in ['sponsors', 'seasons']}
     for season in show_layout['seasons']:
         item = xbmcgui.ListItem(season['title'])
         item.setInfo(type="Video", infoLabels=CBC.get_labels(season))
         image = season['image'].replace('(Size)', '224')
         item.setArt({'thumb': image, 'poster': image})
-        """
-        MICAH MICAH MICAH
-        FIX THIS URL FOR IT SHOULDN"T GO BACK TO gem_shelf_menu
-        Also, you'll need to pass the general show information through to the season.
-        """
-        xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(gem_shelf_menu), item, True)
+        show['season'] = season
+        xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(gem_show_season, query=json.dumps(show)), item, True)
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
