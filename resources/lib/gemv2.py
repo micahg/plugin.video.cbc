@@ -1,6 +1,7 @@
 """Module for the V2 Gem API."""
 import json
 
+from resources.lib.utils import log
 from resources.lib.cbc import CBC
 
 LAYOUT_MAP = {
@@ -42,3 +43,19 @@ class GemV2:
         url = CATEGORY_BY_ID.format(category_id)
         resp = CBC.get_session().get(url)
         return json.loads(resp.content)
+
+    @staticmethod
+    def get_labels(show, episode):
+        """Get labels for a show."""
+        labels = {
+            'studio': 'Canadian Broadcasting Corporation',
+            'country': 'Canada',
+            'tvshowtitle': episode['title'],
+            'title': show['title'],
+            'plot': episode['description'],
+            'plotoutline': episode['description'],
+            'season': episode['season'],
+            'episode': episode['episode']
+        }
+        log('MICAH show is {}'.format(show))
+        return labels

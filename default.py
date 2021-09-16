@@ -7,6 +7,7 @@ import xbmc
 import xbmcplugin
 import xbmcgui
 import xbmcaddon
+import inputstreamhelper
 import routing
 
 from resources.lib.cbc import CBC
@@ -59,8 +60,10 @@ def play(labels, image, url):
     item = xbmcgui.ListItem(labels['title'], path=url)
     item.setArt({'thumb': image, 'poster': image})
     item.setInfo(type="Video", infoLabels=labels)
-    item.setProperty('inputstream', 'inputstream.adaptive')
-    item.setProperty('inputstream.adaptive.manifest_type', 'hls')
+    helper = inputstreamhelper.Helper('hls')
+    if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
+        item.setProperty('inputstream', 'inputstream.adaptive')
+        item.setProperty('inputstream.adaptive.manifest_type', 'hls')
     xbmcplugin.setResolvedUrl(plugin.handle, True, item)
 
 
@@ -150,18 +153,18 @@ def live_channels_menu():
 def gem_episode():
     """Play an episode."""
     json_str = plugin.args['query'][0]
+    log('MICAH TRYING TO PLAY "{}"'.format(json_str))
     episode = json.loads(json_str)
     resp = GemV2().get_episode(episode['url'])
+    log('MICAH resp is {}'.format(resp))
     url = resp['url']
     item = xbmcgui.ListItem("Title", path=url)
-    labels = {
-        'title': "title",
-        'studio': 'Canadian Broadcasting Corporation',
-        'country': 'Canada'
-    }
+    labels = episode['labels']
     item.setInfo(type="Video", infoLabels=labels)
-    item.setProperty('inputstream', 'inputstream.adaptive')
-    item.setProperty('inputstream.adaptive.manifest_type', 'hls')
+    helper = inputstreamhelper.Helper('hls')
+    if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
+        item.setProperty('inputstream', 'inputstream.adaptive')
+        item.setProperty('inputstream.adaptive.manifest_type', 'hls')
     xbmcplugin.setResolvedUrl(plugin.handle, True, item)
 
 
@@ -177,13 +180,9 @@ def gem_show_season():
         image = episode['image'].replace('(Size)', '224')
         item.setArt({'thumb': image, 'poster': image})
         item.setProperty('IsPlayable', 'true')
-        labels = {
-            'title': "title",
-            'studio': 'Canadian Broadcasting Corporation',
-            'country': 'Canada'
-        }
+        labels = GemV2.get_labels(show, episode)
         item.setInfo(type="Video", infoLabels=labels)
-        episode_info = {'url': episode['playSession']['url']}
+        episode_info = {'url': episode['playSession']['url'], 'labels': labels}
         url = plugin.url_for(gem_episode, query=json.dumps(episode_info))
         xbmcplugin.addDirectoryItem(plugin.handle, url, item, False)
     xbmcplugin.endOfDirectory(plugin.handle)
@@ -225,6 +224,7 @@ def gem_shelf_menu():
 
 @plugin.route('/gem/categories/<category_id>')
 def gem_category_menu(category_id):
+    """Populate a menu with categorical content."""
     handle = plugin.handle
     xbmcplugin.setContent(handle, 'videos')
     category = GemV2.get_category(category_id)
