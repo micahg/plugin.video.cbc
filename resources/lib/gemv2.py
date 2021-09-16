@@ -10,6 +10,7 @@ LAYOUT_MAP = {
     'kids': 'https://services.radio-canada.ca/ott/cbc-api/v2/hubs/kids'
 }
 SHOW_BY_ID = 'https://services.radio-canada.ca/ott/cbc-api/v2/shows/{}'
+CATEGORY_BY_ID = 'https://services.radio-canada.ca/ott/cbc-api/v2/categories/{}'
 
 
 class GemV2:
@@ -32,5 +33,12 @@ class GemV2:
     @staticmethod
     def get_episode(url):
         """Get a Gem V2 episode by URL."""
+        resp = CBC.get_session().get(url)
+        return json.loads(resp.content)
+
+    @staticmethod
+    def get_category(category_id):
+        """Get a Gem V2 category by ID."""
+        url = CATEGORY_BY_ID.format(category_id)
         resp = CBC.get_session().get(url)
         return json.loads(resp.content)

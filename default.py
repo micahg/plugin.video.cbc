@@ -193,7 +193,7 @@ def gem_show_season():
 
 
 @plugin.route('/gem/show/<show_id>')
-def gem_shelf_show_menu(show_id):
+def gem_show_menu(show_id):
     """Create a menu for a shelfs items."""
     xbmcplugin.setContent(plugin.handle, 'videos')
     show_layout = GemV2.get_show_layout_by_id(show_id)
@@ -219,10 +219,24 @@ def gem_shelf_menu():
         item = xbmcgui.ListItem(shelf_item['title'])
         image = shelf_item['image'].replace('(Size)', '224')
         item.setArt({'thumb': image, 'poster': image})
-        url = plugin.url_for(gem_shelf_show_menu, shelf_item['id'])
+        url = plugin.url_for(gem_show_menu, shelf_item['id'])
         xbmcplugin.addDirectoryItem(handle, url, item, True)
     xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
     xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE)
+    xbmcplugin.endOfDirectory(handle)
+
+
+@plugin.route('/gem/categories/<category_id>')
+def gem_category_menu(category_id):
+    handle = plugin.handle
+    xbmcplugin.setContent(handle, 'videos')
+    category = GemV2.get_category(category_id)
+    for show in category['items']:
+        item = xbmcgui.ListItem(show['title'])
+        image = show['image'].replace('(Size)', '224')
+        item.setArt({'thumb': image, 'poster': image})
+        url = plugin.url_for(gem_show_menu, show['id'])
+        xbmcplugin.addDirectoryItem(handle, url, item, True)
     xbmcplugin.endOfDirectory(handle)
 
 
@@ -235,11 +249,7 @@ def layout_menu(layout):
     if 'categories' in layout:
         for category in layout['categories']:
             item = xbmcgui.ListItem(category['title'])
-            """
-            MICAH MICAH MICAH PICK IT UP HERE HANDLE CATEGORIES PROERLY
-            """
-            shelf_items = json.dumps({})
-            url = plugin.url_for(gem_shelf_menu, query=shelf_items)
+            url = plugin.url_for(gem_category_menu, category['id'])
             xbmcplugin.addDirectoryItem(handle, url, item, True)
     if 'shelves' in layout:
         for shelf in layout['shelves']:
