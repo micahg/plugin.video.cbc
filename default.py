@@ -7,7 +7,6 @@ import xbmc
 import xbmcplugin
 import xbmcgui
 import xbmcaddon
-import inputstreamhelper
 import routing
 
 from resources.lib.cbc import CBC
