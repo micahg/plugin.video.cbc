@@ -155,9 +155,16 @@ def gem_episode():
     json_str = plugin.args['query'][0]
     log('MICAH TRYING TO PLAY "{}"'.format(json_str))
     episode = json.loads(json_str)
+
+    # get the url, and failing that, attempt authorization, then retry
     resp = GemV2().get_episode(episode['url'])
-    log('MICAH resp is {}'.format(resp))
-    url = resp['url']
+    url = resp['url'] if 'url' in resp else None
+    if not url:
+        log('Failed to get stream URL, attempting to authorize.')
+        if authorize():
+            resp = GemV2().get_episode(episode['url'])
+            url = resp['url'] if 'url' in resp else None
+
     item = xbmcgui.ListItem("Title", path=url)
     labels = episode['labels']
     item.setInfo(type="Video", infoLabels=labels)
@@ -165,7 +172,11 @@ def gem_episode():
     if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
         item.setProperty('inputstream', 'inputstream.adaptive')
         item.setProperty('inputstream.adaptive.manifest_type', 'hls')
-    xbmcplugin.setResolvedUrl(plugin.handle, True, item)
+
+    # if at this point we don't have a URL to play, display an error
+    xbmcplugin.setResolvedUrl(plugin.handle, url is not None, item)
+    if url is None:
+        xbmcgui.Dialog().ok(getString(30010), getString(30011))
 
 
 @plugin.route('/gem/show/season')

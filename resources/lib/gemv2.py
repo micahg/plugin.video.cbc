@@ -1,6 +1,8 @@
 """Module for the V2 Gem API."""
 import json
 
+import requests
+
 from resources.lib.utils import log
 from resources.lib.cbc import CBC
 
@@ -34,7 +36,8 @@ class GemV2:
     @staticmethod
     def get_episode(url):
         """Get a Gem V2 episode by URL."""
-        resp = CBC.get_session().get(url)
+        # resp = CBC.get_session().get(url)
+        resp = requests.get(url)
         return json.loads(resp.content)
 
     @staticmethod
