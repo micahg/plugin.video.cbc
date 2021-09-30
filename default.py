@@ -153,7 +153,6 @@ def live_channels_menu():
 def gem_episode():
     """Play an episode."""
     json_str = plugin.args['query'][0]
-    log('MICAH TRYING TO PLAY "{}"'.format(json_str))
     episode = json.loads(json_str)
 
     # get the url, and failing that, attempt authorization, then retry

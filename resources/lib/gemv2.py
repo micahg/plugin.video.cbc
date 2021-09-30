@@ -3,7 +3,6 @@ import json
 
 import requests
 
-from resources.lib.utils import log
 from resources.lib.cbc import CBC
 
 LAYOUT_MAP = {
@@ -60,5 +59,4 @@ class GemV2:
             'season': episode['season'],
             'episode': episode['episode']
         }
-        log('MICAH show is {}'.format(show))
         return labels
