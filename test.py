@@ -5,23 +5,21 @@ from optparse import OptionParser
 # parse the options
 parser = OptionParser()
 parser.add_option('-a', '--authorize', action='store_true', dest='authorize')
-parser.add_option('-u', '--username', type='string', dest='username',
-                  help='CBC username')
-parser.add_option('-p', '--password', type='string', dest='password',
-                  help='CBC password')
-parser.add_option('-g', '--guid', type='string', dest='guid',
-                  help="not actually a guid")
+parser.add_option('-u', '--username', type='string', dest='username', help='CBC username')
+parser.add_option('-p', '--password', type='string', dest='password', help='CBC password')
+parser.add_option('-g', '--guid', type='string', dest='guid', help="not actually a guid")
 parser.add_option('-l', '--live-programs', action='store_true', dest='progs')
 parser.add_option('-c', '--channels', action='store_true', dest='chans')
 parser.add_option('-v', '--video', action='store_true', dest='video')
 parser.add_option('-s', '--shows', action='store_true', dest='shows')
+parser.add_option('-o', '--layout', type='string', dest='layout', help='CBC Gem V2 layout')
 (options, args) = parser.parse_args()
 
 from resources.lib.livechannels import *
 from resources.lib.liveprograms import *
 from resources.lib.shows import *
 from resources.lib.cbc import CBC
-
+from resources.lib.gemv2 import GemV2
 
 def progress(x):
     print(x)
@@ -43,6 +41,8 @@ if options.chans:
     res = chans.get_live_channels()
 elif options.progs:
     res = events.getLivePrograms()
+elif options.layout:
+    res = GemV2.get_layout(options.layout)
 elif options.video:
     try:
         res = shows.getStream(args[0])
