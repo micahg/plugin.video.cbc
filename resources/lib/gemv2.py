@@ -35,7 +35,6 @@ class GemV2:
     @staticmethod
     def get_episode(url):
         """Get a Gem V2 episode by URL."""
-        # resp = CBC.get_session().get(url)
         resp = requests.get(url)
         return json.loads(resp.content)
 
@@ -52,11 +51,12 @@ class GemV2:
         labels = {
             'studio': 'Canadian Broadcasting Corporation',
             'country': 'Canada',
-            'tvshowtitle': episode['title'],
-            'title': show['title'],
+            'tvshowtitle': show['title'],
+            'title': episode['title'],
             'plot': episode['description'],
             'plotoutline': episode['description'],
             'season': episode['season'],
-            'episode': episode['episode']
         }
+        if 'episode' in episode:
+            labels['episode'] = episode['episode']
         return labels

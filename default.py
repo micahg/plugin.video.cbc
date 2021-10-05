@@ -206,12 +206,26 @@ def gem_show_menu(show_id):
     show_layout = GemV2.get_show_layout_by_id(show_id)
     show = {k: v for (k, v) in show_layout.items() if k not in ['sponsors', 'seasons']}
     for season in show_layout['seasons']:
-        item = xbmcgui.ListItem(season['title'])
-        item.setInfo(type="Video", infoLabels=CBC.get_labels(season))
+        film = season['title'] == 'Film'
+        title = season['assets'][0]['title'] if film else season['title']
+        labels = GemV2.get_labels(season, season)
+
+        # films seem to have been shoe-horned (with teeth) into the structure oddly -- compensate
+        if film:
+            labels['title'] = title
+
+        item = xbmcgui.ListItem(title)
+        item.setInfo(type="Video", infoLabels=labels)
         image = season['image'].replace('(Size)', '224')
         item.setArt({'thumb': image, 'poster': image})
-        show['season'] = season
-        xbmcplugin.addDirectoryItem(plugin.handle, plugin.url_for(gem_show_season, query=json.dumps(show)), item, True)
+        if film:
+            item.setProperty('IsPlayable', 'true')
+            episode_info = {'url': season['assets'][0]['playSession']['url'], 'labels': labels}
+            url = plugin.url_for(gem_episode, query=json.dumps(episode_info))
+        else:
+            show['season'] = season
+            url = plugin.url_for(gem_show_season, query=json.dumps(show))
+        xbmcplugin.addDirectoryItem(plugin.handle, url, item, not film)
     xbmcplugin.endOfDirectory(plugin.handle)
 
 

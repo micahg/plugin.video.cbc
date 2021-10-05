@@ -29,6 +29,6 @@
     <website>https://watch.cbc.ca/</website>
     <source>https://github.com/micahg/plugin.video.cbc</source>
     <news>- Fix movies
-- Fix sort order</news>
+- Fix sort order on shelf and category menus</news>
   </extension>
 </addon>
