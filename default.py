@@ -201,21 +201,11 @@ def gem_show_season():
 
 @plugin.route('/gem/asset/<path:asset>')
 def gem_asset(asset):
-    log(f'MICAH asset is {asset}')
-
     asset_layout = GemV2.get_asset_by_id(asset)
-    log(f'MICAH asset stuff is {asset_layout}')
-
     show = {'title': asset_layout['series']}
     labels = GemV2.get_labels(show, asset_layout)
-    log(f'MICAH labels are {labels}')
-
     image = asset_layout['image']
-    log(f'MICAH image is {image}')
-
     url = GemV2.get_episode(asset_layout['playSession']['url'])
-    log(f'MICAH url is {url}')
-
     play(labels, image, url['url'])
 
 
