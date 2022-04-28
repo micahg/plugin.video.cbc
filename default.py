@@ -199,6 +199,26 @@ def gem_show_season():
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
+@plugin.route('/gem/asset/<path:asset>')
+def gem_asset(asset):
+    log(f'MICAH asset is {asset}')
+
+    asset_layout = GemV2.get_asset_by_id(asset)
+    log(f'MICAH asset stuff is {asset_layout}')
+
+    show = {'title': asset_layout['series']}
+    labels = GemV2.get_labels(show, asset_layout)
+    log(f'MICAH labels are {labels}')
+
+    image = asset_layout['image']
+    log(f'MICAH image is {image}')
+
+    url = GemV2.get_episode(asset_layout['playSession']['url'])
+    log(f'MICAH url is {url}')
+
+    play(labels, image, url['url'])
+
+
 @plugin.route('/gem/show/<show_id>')
 def gem_show_menu(show_id):
     """Create a menu for a shelfs items."""
@@ -237,12 +257,26 @@ def gem_shelf_menu():
     json_str = plugin.args['query'][0]
     shelf_items = json.loads(json_str)
     for shelf_item in shelf_items:
+        log(f'MICAH in shelf_menu {shelf_item}')
         item = xbmcgui.ListItem(shelf_item['title'])
         item.setInfo(type="Video", infoLabels=CBC.get_labels(shelf_item))
         image = shelf_item['image'].replace('(Size)', '224')
         item.setArt({'thumb': image, 'poster': image})
-        url = plugin.url_for(gem_show_menu, shelf_item['id'])
-        xbmcplugin.addDirectoryItem(handle, url, item, True)
+        item_type = shelf_item['type']
+        is_folder = True
+        if item_type == 'SHOW':
+            url = plugin.url_for(gem_show_menu, shelf_item['id'])
+        elif item_type == 'ASSET':
+            url = plugin.url_for(gem_asset, shelf_item['id'])
+            item.setProperty('IsPlayable', 'true')
+            is_folder = False
+        elif item_type == 'SEASON':
+            # ignore the season and go to the show (its what the web UI does)
+            url = plugin.url_for(gem_show_menu, shelf_item['id'].split('/')[0])
+        else:
+            log(f'Unable to handle shelf item type "{item_type}".', True)
+            url = None
+        xbmcplugin.addDirectoryItem(handle, url, item, is_folder)
     xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
     xbmcplugin.endOfDirectory(handle)
 

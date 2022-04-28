@@ -14,6 +14,7 @@ LAYOUT_MAP = {
 }
 SHOW_BY_ID = 'https://services.radio-canada.ca/ott/cbc-api/v2/shows/{}'
 CATEGORY_BY_ID = 'https://services.radio-canada.ca/ott/cbc-api/v2/categories/{}'
+ASSET_BY_ID = 'https://services.radio-canada.ca/ott/cbc-api/v2/assets/{}'
 
 
 class GemV2:
@@ -30,6 +31,12 @@ class GemV2:
     def get_show_layout_by_id(show_id):
         """Get a Gem V2 show layout by ID."""
         url = SHOW_BY_ID.format(show_id)
+        resp = CBC.get_session().get(url)
+        return json.loads(resp.content)
+
+    @staticmethod
+    def get_asset_by_id(asset_id):
+        url = ASSET_BY_ID.format(asset_id)
         resp = CBC.get_session().get(url)
         return json.loads(resp.content)
 

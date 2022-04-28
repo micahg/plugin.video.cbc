@@ -119,3 +119,11 @@ msgstr ""
 msgctxt "#30026"
 msgid "Search"
 msgstr ""
+
+msgctxt "#30027"
+msgid "Unexpected Error"
+msgstr ""
+
+msgctxt "#30028"
+msgid ""
+msgstr ""
