@@ -247,7 +247,6 @@ def gem_shelf_menu():
     json_str = plugin.args['query'][0]
     shelf_items = json.loads(json_str)
     for shelf_item in shelf_items:
-        log(f'MICAH in shelf_menu {shelf_item}')
         item = xbmcgui.ListItem(shelf_item['title'])
         item.setInfo(type="Video", infoLabels=CBC.get_labels(shelf_item))
         image = shelf_item['image'].replace('(Size)', '224')
