@@ -28,8 +28,6 @@
     <forum>https://forum.kodi.tv/showthread.php?tid=328421</forum>
     <website>https://watch.cbc.ca/</website>
     <source>https://github.com/micahg/plugin.video.cbc</source>
-    <news>- Fix authentication
-- Fix movies
-- Fix sort order on shelf and category menus</news>
+    <news>- Fix shelf menu items that are playable</news>
   </extension>
 </addon>
