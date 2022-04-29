@@ -202,11 +202,23 @@ def gem_show_season():
 @plugin.route('/gem/asset/<path:asset>')
 def gem_asset(asset):
     asset_layout = GemV2.get_asset_by_id(asset)
-    show = {'title': asset_layout['series']}
-    labels = GemV2.get_labels(show, asset_layout)
+    labels = GemV2.get_labels({'title': asset_layout['series']}, asset_layout)
     image = asset_layout['image']
     url = GemV2.get_episode(asset_layout['playSession']['url'])
     play(labels, image, url['url'])
+
+
+def gem_add_film_assets(assets):
+    for asset in assets:
+        labels = GemV2.get_labels({'title': asset['series']}, asset)
+        image = asset['image']
+        item = xbmcgui.ListItem(labels['title'])
+        item.setInfo(type="Video", infoLabels=labels)
+        item.setArt({'thumb': image, 'poster': image})
+        item.setProperty('IsPlayable', 'true')
+        episode_info = {'url': asset['playSession']['url'], 'labels': labels}
+        url = plugin.url_for(gem_episode, query=json.dumps(episode_info))
+        xbmcplugin.addDirectoryItem(plugin.handle, url, item, False)
 
 
 @plugin.route('/gem/show/<show_id>')
@@ -216,26 +228,20 @@ def gem_show_menu(show_id):
     show_layout = GemV2.get_show_layout_by_id(show_id)
     show = {k: v for (k, v) in show_layout.items() if k not in ['sponsors', 'seasons']}
     for season in show_layout['seasons']:
-        film = season['title'] == 'Film'
-        title = season['assets'][0]['title'] if film else season['title']
-        labels = GemV2.get_labels(season, season)
 
         # films seem to have been shoe-horned (with teeth) into the structure oddly -- compensate
-        if film:
-            labels['title'] = title
-
-        item = xbmcgui.ListItem(title)
-        item.setInfo(type="Video", infoLabels=labels)
-        image = season['image'].replace('(Size)', '224')
-        item.setArt({'thumb': image, 'poster': image})
-        if film:
-            item.setProperty('IsPlayable', 'true')
-            episode_info = {'url': season['assets'][0]['playSession']['url'], 'labels': labels}
-            url = plugin.url_for(gem_episode, query=json.dumps(episode_info))
+        if season['title'] == 'Film':
+            gem_add_film_assets(season['assets'])
         else:
+            labels = GemV2.get_labels(season, season)
+            item = xbmcgui.ListItem(season['title'])
+            item.setInfo(type="Video", infoLabels=labels)
+            image = season['image'].replace('(Size)', '224')
+            item.setArt({'thumb': image, 'poster': image})
             show['season'] = season
             url = plugin.url_for(gem_show_season, query=json.dumps(show))
-        xbmcplugin.addDirectoryItem(plugin.handle, url, item, not film)
+            xbmcplugin.addDirectoryItem(plugin.handle, url, item, True)
+
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
