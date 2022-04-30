@@ -44,6 +44,11 @@ class GemV2:
     def get_episode(url):
         """Get a Gem V2 episode by URL."""
         auth = loadAuthorization()
+
+        # if we have no authorization, return none to for the UI to authorize
+        if auth is None:
+            return None
+
         headers = {}
         if 'token' in auth:
             headers['Authorization'] = 'Bearer {}'.format(auth['token'])

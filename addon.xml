@@ -28,6 +28,7 @@
     <forum>https://forum.kodi.tv/showthread.php?tid=328421</forum>
     <website>https://watch.cbc.ca/</website>
     <source>https://github.com/micahg/plugin.video.cbc</source>
-    <news>- Fix shelf menu items that are playable</news>
+    <news>- Fix shelf menu items that are playable
+- Fix authorization issue</news>
   </extension>
 </addon>

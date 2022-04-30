@@ -158,7 +158,7 @@ def gem_episode():
 
     # get the url, and failing that, attempt authorization, then retry
     resp = GemV2().get_episode(episode['url'])
-    url = resp['url'] if 'url' in resp else None
+    url = None if not resp else resp['url'] if 'url' in resp else None
     if not url:
         log('Failed to get stream URL, attempting to authorize.')
         if authorize():
