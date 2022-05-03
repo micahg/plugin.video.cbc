@@ -66,6 +66,28 @@ def play(labels, image, url):
         item.setProperty('inputstream', 'inputstream.adaptive')
         item.setProperty('inputstream.adaptive.manifest_type', 'hls')
     xbmcplugin.setResolvedUrl(plugin.handle, True, item)
+    
+def add_items(handle, items):
+    for item in items:
+        list_item = xbmcgui.ListItem(item['title'])
+        list_item.setInfo(type="Video", infoLabels=CBC.get_labels(item))
+        image = item['image'].replace('(Size)', '224')
+        list_item.setArt({'thumb': image, 'poster': image})
+        item_type = item['type']
+        is_folder = True
+        if item_type == 'SHOW':
+            url = plugin.url_for(gem_show_menu, item['id'])
+        elif item_type == 'ASSET':
+            url = plugin.url_for(gem_asset, item['id'])
+            list_item.setProperty('IsPlayable', 'true')
+            is_folder = False
+        elif item_type == 'SEASON':
+            # ignore the season and go to the show (its what the web UI does)
+            url = plugin.url_for(gem_show_menu, item['id'].split('/')[0])
+        else:
+            log(f'Unable to handle shelf item type "{item_type}".', True)
+            url = None
+        xbmcplugin.addDirectoryItem(handle, url, list_item, is_folder)
 
 
 @plugin.route('/logout')
@@ -252,26 +274,7 @@ def gem_shelf_menu():
     xbmcplugin.setContent(handle, 'videos')
     json_str = plugin.args['query'][0]
     shelf_items = json.loads(json_str)
-    for shelf_item in shelf_items:
-        item = xbmcgui.ListItem(shelf_item['title'])
-        item.setInfo(type="Video", infoLabels=CBC.get_labels(shelf_item))
-        image = shelf_item['image'].replace('(Size)', '224')
-        item.setArt({'thumb': image, 'poster': image})
-        item_type = shelf_item['type']
-        is_folder = True
-        if item_type == 'SHOW':
-            url = plugin.url_for(gem_show_menu, shelf_item['id'])
-        elif item_type == 'ASSET':
-            url = plugin.url_for(gem_asset, shelf_item['id'])
-            item.setProperty('IsPlayable', 'true')
-            is_folder = False
-        elif item_type == 'SEASON':
-            # ignore the season and go to the show (its what the web UI does)
-            url = plugin.url_for(gem_show_menu, shelf_item['id'].split('/')[0])
-        else:
-            log(f'Unable to handle shelf item type "{item_type}".', True)
-            url = None
-        xbmcplugin.addDirectoryItem(handle, url, item, is_folder)
+    add_items(handle, shelf_items)
     xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
     xbmcplugin.endOfDirectory(handle)
 
@@ -290,6 +293,15 @@ def gem_category_menu(category_id):
         url = plugin.url_for(gem_show_menu, show['id'])
         xbmcplugin.addDirectoryItem(handle, url, item, True)
     xbmcplugin.addSortMethod(handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
+    xbmcplugin.endOfDirectory(handle)
+
+
+@plugin.route('/gem/search')
+def search():
+    handle = plugin.handle
+    term = xbmcgui.Dialog().input(SEARCH, type=xbmcgui.INPUT_ALPHANUM)
+    results = GemV2.search_by_term(term)
+    add_items(handle, results)
     xbmcplugin.endOfDirectory(handle)
 
 
@@ -327,6 +339,7 @@ def main_menu():
     for key, value in GEMS.items():
         xbmcplugin.addDirectoryItem(handle, plugin.url_for(layout_menu, key), xbmcgui.ListItem(value), True)
     xbmcplugin.addDirectoryItem(handle, plugin.url_for(live_channels_menu), xbmcgui.ListItem(LIVE_CHANNELS), True)
+    xbmcplugin.addDirectoryItem(handle, plugin.url_for(search), xbmcgui.ListItem(SEARCH), True)
     xbmcplugin.endOfDirectory(handle)
 
 
