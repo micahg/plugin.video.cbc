@@ -59,13 +59,17 @@ def authorize():
 def play(labels, image, url):
     """Play the stream using the configured player."""
     item = xbmcgui.ListItem(labels['title'], path=url)
-    item.setArt({'thumb': image, 'poster': image})
+    if image:
+        item.setArt({'thumb': image, 'poster': image})
     item.setInfo(type="Video", infoLabels=labels)
     helper = inputstreamhelper.Helper('hls')
     if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
         item.setProperty('inputstream', 'inputstream.adaptive')
         item.setProperty('inputstream.adaptive.manifest_type', 'hls')
     xbmcplugin.setResolvedUrl(plugin.handle, True, item)
+    if url is None:
+        xbmcgui.Dialog().ok(getString(30010), getString(30011))
+
     
 def add_items(handle, items):
     for item in items:
@@ -187,18 +191,8 @@ def gem_episode():
             resp = GemV2().get_episode(episode['url'])
             url = resp['url'] if 'url' in resp else None
 
-    item = xbmcgui.ListItem("Title", path=url)
     labels = episode['labels']
-    item.setInfo(type="Video", infoLabels=labels)
-    helper = inputstreamhelper.Helper('hls')
-    if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
-        item.setProperty('inputstream', 'inputstream.adaptive')
-        item.setProperty('inputstream.adaptive.manifest_type', 'hls')
-
-    # if at this point we don't have a URL to play, display an error
-    xbmcplugin.setResolvedUrl(plugin.handle, url is not None, item)
-    if url is None:
-        xbmcgui.Dialog().ok(getString(30010), getString(30011))
+    play(labels, None, url)
 
 
 @plugin.route('/gem/show/season')
@@ -224,10 +218,16 @@ def gem_show_season():
 @plugin.route('/gem/asset/<path:asset>')
 def gem_asset(asset):
     asset_layout = GemV2.get_asset_by_id(asset)
+    resp = GemV2.get_episode(asset_layout['playSession']['url'])
+    url = None if not resp else resp['url'] if 'url' in resp else None
+    if not url:
+        log('Failed to get stream URL, attempting to authorize.')
+        if authorize():
+            resp = GemV2().get_episode(asset_layout['playSession']['url'])
+            url = resp['url'] if 'url' in resp else None
     labels = GemV2.get_labels({'title': asset_layout['series']}, asset_layout)
     image = asset_layout['image']
-    url = GemV2.get_episode(asset_layout['playSession']['url'])
-    play(labels, image, url['url'])
+    play(labels, image, url)
 
 
 def gem_add_film_assets(assets):
