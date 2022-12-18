@@ -36,7 +36,7 @@ to register the device. The second step, if a login is provided, is to log the
 user in.
 
 ## Test Examples
-The following is for a season one episode of still standing that requies both
+The following is for a season one episode of still standing that requires both
 device registration and user authorization.
 
 ```
