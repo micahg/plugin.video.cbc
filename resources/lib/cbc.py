@@ -1,18 +1,18 @@
 """Module for general CBC stuff"""
+from datetime import datetime
 from uuid import uuid4
 from base64 import b64encode, b64decode
 import http.client as http_client
-http_client.HTTPConnection.debuglevel = 1
 import urllib.request
 import urllib.parse
 import urllib.error
 import json
-from xml.dom.minidom import *
-import xml.etree.ElementTree as ET
 
 import requests
 
 from .utils import save_cookies, loadCookies, saveAuthorization, log
+
+http_client.HTTPConnection.debuglevel = 1
 
 CALLSIGN = 'cbc$callSign'
 API_KEY = '3f4beddd-2061-49b0-ae80-6f1f2ed65b37'
@@ -89,9 +89,12 @@ class CBC:
         if resp.status_code != 200:
             log('Call to authorize fails', True)
             return False
+        
+        if not 'x-ms-gateway-requestid' in resp.headers:
+            log('Response had no x-ms-gateway-requestid header')
+            return False
 
-        return True
-
+        return resp.headers['x-ms-gateway-requestid']
 
     @staticmethod
     def azure_authorize_self_asserted(sess: requests.Session, username: str, password: str, csrf: str, tx_arg: str):
@@ -112,19 +115,30 @@ class CBC:
 
 
     @staticmethod
-    def azure_authorize_confirmed(sess: requests.Session, csrf: str, tx_arg: str):
+    def azure_authorize_confirmed(sess: requests.Session, csrf: str, tx_arg: str, req_id: str):
         """
         Make the third authorization call.
         @param sess The requests session
         @param csrf The csrf token
         @param tx_arg the tx parameter
         """
-        # headers = { 'x-csrf-token': csrf }
+        trace_ts = int(datetime.now().timestamp())
+        diags = {
+            'pageViewId': req_id, # x-ms-gateway-requestid from response header to AUTHORIZE_LOGIN
+            'pageId': 'SelfAsserted',
+            'trace': [
+                {
+                    'ac':'T021 - URL:https://micro-sites.radio-canada.ca/b2cpagelayouts/login/email?ui_locales=en&azpContext=cbcgem',
+                    'acST':trace_ts,
+                    'acD':36}
+            ]
+        }
+        diag_str = json.dumps(diags)
         params = {
             'tx': tx_arg,
             'p': 'B2C_1A_ExternalClient_FrontEnd_Login_CBC',
             'csrf_token': csrf,
-            # 'diags': '{"pageViewId":"69fffafd-f95b-457b-a277-8df3b7a59c72","pageId":"CombinedSigninAndSignup","trace":[{"ac":"T005","acST":1681150201,"acD":1},{"ac":"T021 - URL:https://micro-sites.radio-canada.ca/b2cpagelayouts/login/password?ui_locales=en&azpContext=cbcgem","acST":1681150201,"acD":30},{"ac":"T019","acST":1681150201,"acD":5},{"ac":"T004","acST":1681150201,"acD":3},{"ac":"T003","acST":1681150201,"acD":1},{"ac":"T035","acST":1681150202,"acD":0},{"ac":"T030Online","acST":1681150202,"acD":0},{"ac":"T002","acST":1681150208,"acD":0},{"ac":"T018T010","acST":1681150208,"acD":493}]}',
+            'diags': diag_str,
         }
 
         resp = sess.get(CONFIRM_LOGIN, params=params)
@@ -135,22 +149,75 @@ class CBC:
         return True
 
     @staticmethod
-    def azure_authorize_sign_in(sess: requests.Session, csrf: str, tx_arg: str):
+    def azure_authorize_sign_in(sess: requests.Session, csrf: str, tx_arg: str, req_id: str):
         """
         Make the third authorization call.
         @param sess The requests session
         @param csrf The csrf token
         @param tx_arg the tx parameter
         """
+        trace_ts = int(datetime.now().timestamp())
+        diags = {
+            'pageViewId': req_id, # x-ms-gateway-requestid from response header to AUTHORIZE_LOGIN
+            'pageId': 'CombinedSigninAndSignup',
+            'trace': [
+                {
+                    'ac': 'T005',
+                    'acST': trace_ts,
+                    'acD': 1,
+                },
+                {
+                    'ac':'T021 - URL:https://micro-sites.radio-canada.ca/b2cpagelayouts/login/password?ui_locales=en&azpContext=cbcgem',
+                    'acST':trace_ts,
+                    'acD':28
+                },
+                {
+                    'ac': 'T019',
+                    'acST': trace_ts,
+                    'acD': 1,
+                },
+                {
+                    'ac': 'T004',
+                    'acST': trace_ts,
+                    'acD': 3,
+                },
+                {
+                    'ac': 'T003',
+                    'acST': trace_ts,
+                    'acD': 3,
+                },
+                {
+                    'ac': 'T035',
+                    'acST': trace_ts,
+                    'acD': 0,
+                },
+                {
+                    'ac': 'T030Online',
+                    'acST': trace_ts,
+                    'acD': 0,
+                },
+                {
+                    'ac': 'T002',
+                    'acST': trace_ts,
+                    'acD': 3,
+                },
+                {
+                    'ac': 'T018T010',
+                    'acST': trace_ts,
+                    'acD': 526,
+                },
+            ]
+        }
         params = {
             'tx': tx_arg,
             'p': 'B2C_1A_ExternalClient_FrontEnd_Login_CBC',
             'csrf_token': csrf,
             'rememberMe': 'true',
+            'diags': diags,
         }
 
         resp = sess.get(SIGNIN_LOGIN, params=params)
-        if resp.status_code != 200:
+        if resp.status_code != 302:
             log('Call to authorize fails', True)
             return False
 
@@ -163,7 +230,8 @@ class CBC:
         """
         sess = requests.Session()
 
-        if not CBC.azure_authorize_authorize(sess):
+        gw_req_id = CBC.azure_authorize_authorize(sess)
+        if not gw_req_id:
             log('Authorization "authorize" step failed', True)
             return False
 
@@ -194,11 +262,11 @@ class CBC:
             log('Authorization "SelfAsserted" step failed', True)
             return False
 
-        if not CBC.azure_authorize_confirmed(sess, csrf_arg, tx_arg):
+        if not CBC.azure_authorize_confirmed(sess, csrf_arg, tx_arg, gw_req_id):
             log('Authorization "confirmed" step failed', True)
             return False
 
-        if not CBC.azure_authorize_sign_in(sess, csrf_arg, tx_arg):
+        if not CBC.azure_authorize_sign_in(sess, csrf_arg, tx_arg, gw_req_id):
             log('Authorization "confirmed" step failed', True)
             return False
 
