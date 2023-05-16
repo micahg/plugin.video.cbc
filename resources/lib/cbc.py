@@ -81,7 +81,6 @@ class CBC:
             'scope': SCOPES,
             'response_type': 'id_token token',
             'response_mode': 'fragment',
-            'prompt': 'login',
             'state': state,
             'state_value': state,
             'ui_locales': 'en',
