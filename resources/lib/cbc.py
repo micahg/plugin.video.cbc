@@ -42,6 +42,7 @@ SCOPES = 'openid '\
         'https://rcmnb2cprod.onmicrosoft.com/84593b65-0ef6-4a72-891c-d351ddd50aab/toutv-profiling '\
         'https://rcmnb2cprod.onmicrosoft.com/84593b65-0ef6-4a72-891c-d351ddd50aab/testapiwithjwtendpoint.admin '\
         'https://rcmnb2cprod.onmicrosoft.com/84593b65-0ef6-4a72-891c-d351ddd50aab/id.account.info'
+                # X='https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cbc18070/b2c_1a_oidcdiscoveryendpoint_stub/oauth2/v2.0/authorize'
 AUTHORIZE_LOGIN = 'https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cbc18070/B2C_1A_ExternalClient_FrontEnd_Login_CBC/oauth2/v2.0/authorize'
 SELF_ASSERTED_LOGIN = 'https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cbc18070/B2C_1A_ExternalClient_FrontEnd_Login_CBC/SelfAsserted'
 CONFIRM_LOGIN = 'https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cbc18070/B2C_1A_ExternalClient_FrontEnd_Login_CBC/api/SelfAsserted/confirmed'
@@ -91,21 +92,23 @@ class CBC:
             return False
         
         if not 'x-ms-gateway-requestid' in resp.headers:
-            log('Response had no x-ms-gateway-requestid header')
+            log('authorize authorize response had no x-ms-gateway-requestid header')
             return False
 
         return resp.headers['x-ms-gateway-requestid']
 
     @staticmethod
-    def azure_authorize_self_asserted(sess: requests.Session, username: str, password: str, csrf: str, tx_arg: str):
+    def azure_authorize_self_asserted(sess: requests.Session, username: str, tx_arg: str, password: str = None):
         """
         Make the second authorization call.
         @param sess The requests session
         """
-
-        headers = { 'x-csrf-token': csrf }
+        cookies = sess.cookies.get_dict()
+        headers = { 'x-csrf-token': cookies['x-ms-cpim-csrf'] }
         params = { 'tx': tx_arg, 'p': 'B2C_1A_ExternalClient_FrontEnd_Login_CBC' }
-        data = { 'request_type': 'RESPONSE', 'email': username, 'password': password }
+        data = { 'request_type': 'RESPONSE', 'email': username}
+        if password:
+            data['password'] = password
 
         resp = sess.post(SELF_ASSERTED_LOGIN, params=params, headers=headers, data=data)
         if not resp.status_code == 200:
@@ -115,7 +118,7 @@ class CBC:
 
 
     @staticmethod
-    def azure_authorize_confirmed(sess: requests.Session, csrf: str, tx_arg: str, req_id: str):
+    def azure_authorize_confirmed(sess: requests.Session, tx_arg: str, req_id: str):
         """
         Make the third authorization call.
         @param sess The requests session
@@ -127,17 +130,18 @@ class CBC:
             'pageViewId': req_id, # x-ms-gateway-requestid from response header to AUTHORIZE_LOGIN
             'pageId': 'SelfAsserted',
             'trace': [
-                {
-                    'ac':'T021 - URL:https://micro-sites.radio-canada.ca/b2cpagelayouts/login/email?ui_locales=en&azpContext=cbcgem',
-                    'acST':trace_ts,
-                    'acD':36}
+        #         {
+        #             'ac':'T021 - URL:https://micro-sites.radio-canada.ca/b2cpagelayouts/login/email?ui_locales=en&azpContext=cbcgem',
+        #             'acST':trace_ts,
+        #             'acD':36}
             ]
         }
         diag_str = json.dumps(diags)
+        cookies = sess.cookies.get_dict()
         params = {
             'tx': tx_arg,
             'p': 'B2C_1A_ExternalClient_FrontEnd_Login_CBC',
-            'csrf_token': csrf,
+            'csrf_token': cookies['x-ms-cpim-csrf'],
             'diags': diag_str,
         }
 
@@ -146,10 +150,14 @@ class CBC:
             log('Call to authorize fails', True)
             return False
 
-        return True
+        if not 'x-ms-gateway-requestid' in resp.headers:
+            log('authorize confirmed response had no x-ms-gateway-requestid header')
+            return False
+
+        return resp.headers['x-ms-gateway-requestid']
 
     @staticmethod
-    def azure_authorize_sign_in(sess: requests.Session, csrf: str, tx_arg: str, req_id: str):
+    def azure_authorize_sign_in(sess: requests.Session, tx_arg: str, req_id: str):
         """
         Make the third authorization call.
         @param sess The requests session
@@ -161,59 +169,61 @@ class CBC:
             'pageViewId': req_id, # x-ms-gateway-requestid from response header to AUTHORIZE_LOGIN
             'pageId': 'CombinedSigninAndSignup',
             'trace': [
-                {
-                    'ac': 'T005',
-                    'acST': trace_ts,
-                    'acD': 1,
-                },
-                {
-                    'ac':'T021 - URL:https://micro-sites.radio-canada.ca/b2cpagelayouts/login/password?ui_locales=en&azpContext=cbcgem',
-                    'acST':trace_ts,
-                    'acD':28
-                },
-                {
-                    'ac': 'T019',
-                    'acST': trace_ts,
-                    'acD': 1,
-                },
-                {
-                    'ac': 'T004',
-                    'acST': trace_ts,
-                    'acD': 3,
-                },
-                {
-                    'ac': 'T003',
-                    'acST': trace_ts,
-                    'acD': 3,
-                },
-                {
-                    'ac': 'T035',
-                    'acST': trace_ts,
-                    'acD': 0,
-                },
-                {
-                    'ac': 'T030Online',
-                    'acST': trace_ts,
-                    'acD': 0,
-                },
-                {
-                    'ac': 'T002',
-                    'acST': trace_ts,
-                    'acD': 3,
-                },
-                {
-                    'ac': 'T018T010',
-                    'acST': trace_ts,
-                    'acD': 526,
-                },
+        #         {
+        #             'ac': 'T005',
+        #             'acST': trace_ts,
+        #             'acD': 1,
+        #         },
+        #         {
+        #             'ac':'T021 - URL:https://micro-sites.radio-canada.ca/b2cpagelayouts/login/password?ui_locales=en&azpContext=cbcgem',
+        #             'acST':trace_ts,
+        #             'acD':28
+        #         },
+        #         {
+        #             'ac': 'T019',
+        #             'acST': trace_ts,
+        #             'acD': 1,
+        #         },
+        #         {
+        #             'ac': 'T004',
+        #             'acST': trace_ts,
+        #             'acD': 3,
+        #         },
+        #         {
+        #             'ac': 'T003',
+        #             'acST': trace_ts,
+        #             'acD': 3,
+        #         },
+        #         {
+        #             'ac': 'T035',
+        #             'acST': trace_ts,
+        #             'acD': 0,
+        #         },
+        #         {
+        #             'ac': 'T030Online',
+        #             'acST': trace_ts,
+        #             'acD': 0,
+        #         },
+        #         {
+        #             'ac': 'T002',
+        #             'acST': trace_ts,
+        #             'acD': 3,
+        #         },
+        #         {
+        #             'ac': 'T018T010',
+        #             'acST': trace_ts,
+        #             'acD': 526,
+        #         },
             ]
         }
+        diag_str = json.dumps(diags)
+        cookies = sess.cookies.get_dict()
         params = {
             'tx': tx_arg,
             'p': 'B2C_1A_ExternalClient_FrontEnd_Login_CBC',
-            'csrf_token': csrf,
+            'csrf_token': cookies['x-ms-cpim-csrf'],
             'rememberMe': 'true',
-            'diags': diags,
+            'diags': diag_str,
         }
 
         resp = sess.get(SIGNIN_LOGIN, params=params)
@@ -227,8 +237,11 @@ class CBC:
     def azure_authorize(self, username=None, password=None, callback=None):
         """
         Perform multi-step authorization with CBC's azure authorization platform.
+        ** Azure Active Directory B2C **
         """
         sess = requests.Session()
+        sess.cookies.set('AMCVS_55E654E45894AF350A495CFE%40AdobeOrg', '1')
+        sess.cookies.set('AMCV_55E654E45894AF350A495CFE%40AdobeOrg', '1406116232%7CMCIDTS%7C19493%7CMCMID%7C27107171535685947972860260974464889566%7CMCAAMLH-1684758549%7C7%7CMCAAMB-1684758549%7C6G1ynYcLPuiQxYZrsz_pkqfLG9yMXBpb2zX5dvJdYQJzPXImdj0y%7CMCOPTOUT-1684160949s%7CNONE%7CMCAID%7CNONE%7CvVersion%7C2.5.0')
 
         gw_req_id = CBC.azure_authorize_authorize(sess)
         if not gw_req_id:
@@ -256,17 +269,21 @@ class CBC:
         b64_tid = b64encode(tid_str).decode('ascii')
         b64_tid = b64_tid.rstrip('=')
         tx_arg = f'StateProperties={b64_tid}'
-        csrf_arg = cookies['x-ms-cpim-csrf']
 
-        if not CBC.azure_authorize_self_asserted(sess, username, password, csrf_arg, tx_arg):
+        if not CBC.azure_authorize_self_asserted(sess, username, tx_arg):
             log('Authorization "SelfAsserted" step failed', True)
             return False
 
-        if not CBC.azure_authorize_confirmed(sess, csrf_arg, tx_arg, gw_req_id):
+        gw_req_id = CBC.azure_authorize_confirmed(sess, tx_arg, gw_req_id)
+        if not gw_req_id:
             log('Authorization "confirmed" step failed', True)
             return False
 
-        if not CBC.azure_authorize_sign_in(sess, csrf_arg, tx_arg, gw_req_id):
+        if not CBC.azure_authorize_self_asserted(sess, username, tx_arg, password):
+            log('Authorization "SelfAsserted" step failed', True)
+            return False
+
+        if not CBC.azure_authorize_sign_in(sess, tx_arg, gw_req_id):
             log('Authorization "confirmed" step failed', True)
             return False
 
