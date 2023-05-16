@@ -5,6 +5,7 @@ from base64 import b64encode, b64decode
 import http.client as http_client
 import urllib.request
 import urllib.parse
+from urllib.parse import urlparse, parse_qs
 import urllib.error
 import json
 
@@ -124,24 +125,11 @@ class CBC:
         @param csrf The csrf token
         @param tx_arg the tx parameter
         """
-        trace_ts = int(datetime.now().timestamp())
-        diags = {
-            'pageViewId': req_id, # x-ms-gateway-requestid from response header to AUTHORIZE_LOGIN
-            'pageId': 'SelfAsserted',
-            'trace': [
-        #         {
-        #             'ac':'T021 - URL:https://micro-sites.radio-canada.ca/b2cpagelayouts/login/email?ui_locales=en&azpContext=cbcgem',
-        #             'acST':trace_ts,
-        #             'acD':36}
-            ]
-        }
-        diag_str = json.dumps(diags)
         cookies = sess.cookies.get_dict()
         params = {
             'tx': tx_arg,
             'p': 'B2C_1A_ExternalClient_FrontEnd_Login_CBC',
             'csrf_token': cookies['x-ms-cpim-csrf'],
-            'diags': diag_str,
         }
 
         resp = sess.get(CONFIRM_LOGIN, params=params)
@@ -163,74 +151,25 @@ class CBC:
         @param csrf The csrf token
         @param tx_arg the tx parameter
         """
-        trace_ts = int(datetime.now().timestamp())
-        diags = {
-            'pageViewId': req_id, # x-ms-gateway-requestid from response header to AUTHORIZE_LOGIN
-            'pageId': 'CombinedSigninAndSignup',
-            'trace': [
-        #         {
-        #             'ac': 'T005',
-        #             'acST': trace_ts,
-        #             'acD': 1,
-        #         },
-        #         {
-        #             'ac':'T021 - URL:https://micro-sites.radio-canada.ca/b2cpagelayouts/login/password?ui_locales=en&azpContext=cbcgem',
-        #             'acST':trace_ts,
-        #             'acD':28
-        #         },
-        #         {
-        #             'ac': 'T019',
-        #             'acST': trace_ts,
-        #             'acD': 1,
-        #         },
-        #         {
-        #             'ac': 'T004',
-        #             'acST': trace_ts,
-        #             'acD': 3,
-        #         },
-        #         {
-        #             'ac': 'T003',
-        #             'acST': trace_ts,
-        #             'acD': 3,
-        #         },
-        #         {
-        #             'ac': 'T035',
-        #             'acST': trace_ts,
-        #             'acD': 0,
-        #         },
-        #         {
-        #             'ac': 'T030Online',
-        #             'acST': trace_ts,
-        #             'acD': 0,
-        #         },
-        #         {
-        #             'ac': 'T002',
-        #             'acST': trace_ts,
-        #             'acD': 3,
-        #         },
-        #         {
-        #             'ac': 'T018T010',
-        #             'acST': trace_ts,
-        #             'acD': 526,
-        #         },
-            ]
-        }
-        diag_str = json.dumps(diags)
         cookies = sess.cookies.get_dict()
         params = {
             'tx': tx_arg,
             'p': 'B2C_1A_ExternalClient_FrontEnd_Login_CBC',
             'csrf_token': cookies['x-ms-cpim-csrf'],
             'rememberMe': 'true',
-            'diags': diag_str,
         }
 
-        resp = sess.get(SIGNIN_LOGIN, params=params)
+        resp = sess.get(SIGNIN_LOGIN, params=params, allow_redirects=False)
         if resp.status_code != 302:
             log('Call to authorize fails', True)
-            return False
+            return None
+        
+        url = urlparse(resp.headers['location'])
+        frags = parse_qs(url.fragment)
+        access_token = frags['access_token'][0]
+        id_token = frags['id_token'][0]
 
-        return True
+        return (access_token, id_token)
 
 
     def azure_authorize(self, username=None, password=None, callback=None):
@@ -239,9 +178,9 @@ class CBC:
         ** Azure Active Directory B2C **
         """
         sess = requests.Session()
-        sess.cookies.set('AMCVS_55E654E45894AF350A495CFE%40AdobeOrg', '1')
-        sess.cookies.set('AMCV_55E654E45894AF350A495CFE%40AdobeOrg', '1406116232%7CMCIDTS%7C19493%7CMCMID%7C27107171535685947972860260974464889566%7CMCAAMLH-1684758549%7C7%7CMCAAMB-1684758549%7C6G1ynYcLPuiQxYZrsz_pkqfLG9yMXBpb2zX5dvJdYQJzPXImdj0y%7CMCOPTOUT-1684160949s%7CNONE%7CMCAID%7CNONE%7CvVersion%7C2.5.0')
 
+        if callback:
+            callback(0)
         gw_req_id = CBC.azure_authorize_authorize(sess)
         if not gw_req_id:
             log('Authorization "authorize" step failed', True)
@@ -281,10 +220,12 @@ class CBC:
         if not CBC.azure_authorize_self_asserted(sess, username, tx_arg, password):
             log('Authorization "SelfAsserted" step failed', True)
             return False
-
-        if not CBC.azure_authorize_sign_in(sess, tx_arg, gw_req_id):
+        access_token, id_token = CBC.azure_authorize_sign_in(sess, tx_arg, gw_req_id)
+        if not access_token or not id_token:
             log('Authorization "confirmed" step failed', True)
             return False
+
+        saveAuthorization({'access': access_token, 'id': id_token})
 
         return True
 
