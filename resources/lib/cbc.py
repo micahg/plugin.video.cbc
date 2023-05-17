@@ -233,86 +233,6 @@ class CBC:
 
         return True
 
-    def authorize(self, username=None, password=None, callback=None):
-        """Authorize for video playback."""
-        token = self.radius_login(username, password)
-        if callback is not None:
-            callback(25)
-        if token is None:
-            log('Radius Login failed', True)
-            return False
-
-        jwt = self.radius_jwt(token)
-        if callback is not None:
-            callback(50)
-        if jwt is None:
-            log('Radius JWT retrieval failed', True)
-            return False
-
-        # token = self.login(login_url, auth['devid'], jwt)
-        auth = {}
-        token = self.get_access_token(jwt)
-        if callback is not None:
-            callback(75)
-        if token is None:
-            log('Access token retrieval failed', True)
-            return False
-        auth['token'] = token
-
-        claims = self.get_claims_token(token)
-        if callback is not None:
-            callback(100)
-        if token is None:
-            log('Claims token retrieval failed', True)
-            return False
-        auth['claims'] = claims
-
-        saveAuthorization(auth)
-        save_cookies(self.session.cookies)
-
-        return True
-
-    def radius_login(self, username, password):
-        """Login with Radius using user credentials."""
-        query = urllib.parse.urlencode({'apikey': API_KEY})
-
-        data = {
-            'email': username,
-            'password': password
-        }
-        url = RADIUS_LOGIN_FMT.format(query)
-        req = self.session.post(url, json=data)
-        if not req.status_code == 200:
-            log('{req.url} returns status {req.status_code}', True)
-            return None
-
-        token = json.loads(req.content)['access_token']
-
-        return token
-
-    def radius_jwt(self, token):
-        """Exchange a radius token for a JWT."""
-        query = urllib.parse.urlencode({
-            'access_token': token,
-            'apikey': API_KEY,
-            'jwtapp': 'jwt'
-        })
-        url = RADIUS_JWT_FMT.format(query)
-        req = self.session.get(url)
-        if not req.status_code == 200:
-            log('{} returns status {}'.format(req.url, req.status_code))
-            return None
-        return json.loads(req.content)['signature']
-
-    def get_access_token(self, jwt):
-        """Exchange a JWT for another JWT."""
-        data = {'jwt': jwt}
-        req = self.session.post(TOKEN_URL, json=data)
-        if not req.status_code == 200:
-            log('{} returns status {}'.format(req.url, req.status_code), True)
-            return None
-        return json.loads(req.content)['accessToken']
-
     def get_claims_token(self, access_token):
         """Get the claims token for tied to the access token."""
         # headers = {'ott-access-token': access_token}
@@ -324,7 +244,8 @@ class CBC:
             return None
         return json.loads(req.content)['claimsToken']
 
-    def getImage(self, item):
+    def get_image(self, item):
+        """Get an image."""
         # ignore 'cbc$liveImage' - the pix don't make sense after the first load
         if 'defaultThumbnailUrl' in item:
             return item['defaultThumbnailUrl']
@@ -386,7 +307,7 @@ class CBC:
         return labels
 
 
-    def parseSmil(self, smil):
+    def parse_smil(self, smil):
         r = self.session.get(smil)
 
         if not r.status_code == 200:

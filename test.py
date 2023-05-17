@@ -94,21 +94,3 @@ if 'shelves' in res:
     for shelf in res['shelves']:
         id, title, _, items = shelf.values()
         print(f'Shelves:  {id} - {title}')
-        # item = xbmcgui.ListItem(shelf['title'])
-        # shelf_items = json.dumps(shelf['items'])
-        # url = plugin.url_for(gem_shelf_menu, query=shelf_items)
-# for item in res:
-#     if options.guid == None:
-#         if options.chans:
-#             print('{}) {} {}: {}'.format(item['guid'], item['cbc$callSign'], item['title'], item['description']))
-#         elif options.progs:
-#             if item['availabilityState'] == 'available':
-#                 print('{}) {}: {}'.format(item['guid'], item['title'], item['description']))
-#         elif options.shows:
-#             print('{}) {}: {}\n\t{}\n'.format(item['guid'],
-#                                               item['title'].encode('utf-8'),
-#                                               item['description'].encode('utf-8'),
-#                                               item['url']))
-#     elif item['guid'] == options.guid:
-#         smil = item['content'][0]['url']
-#         print(cbc.parseSmil(smil))
