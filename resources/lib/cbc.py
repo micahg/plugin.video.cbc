@@ -1,18 +1,16 @@
 """Module for general CBC stuff"""
 from uuid import uuid4
 from base64 import b64encode, b64decode
-import http.client as http_client
-import urllib.request
-import urllib.parse
-from urllib.parse import urlparse, parse_qs
-import urllib.error
 import json
+# import http.client as http_client
+from urllib.parse import urlparse, parse_qs
+from xml.dom.minidom import parseString
 
 import requests
 
 from .utils import save_cookies, loadCookies, saveAuthorization, log
 
-http_client.HTTPConnection.debuglevel = 1
+# http_client.HTTPConnection.debuglevel = 1
 
 CALLSIGN = 'cbc$callSign'
 API_KEY = '3f4beddd-2061-49b0-ae80-6f1f2ed65b37'
@@ -88,7 +86,7 @@ class CBC:
         if resp.status_code != 200:
             log('Call to authorize fails', True)
             return False
-        
+
         if not 'x-ms-gateway-requestid' in resp.headers:
             log('authorize authorize response had no x-ms-gateway-requestid header')
             return False
@@ -160,7 +158,7 @@ class CBC:
         if resp.status_code != 302:
             log('Call to authorize fails', True)
             return None
-        
+
         url = urlparse(resp.headers['location'])
         frags = parse_qs(url.fragment)
         access_token = frags['access_token'][0]
@@ -308,10 +306,11 @@ class CBC:
 
 
     def parse_smil(self, smil):
+        """Parse a SMIL file for the video."""
         r = self.session.get(smil)
 
         if not r.status_code == 200:
-            log('ERROR: {} returns status of {}'.format(smil, r.status_code), True)
+            log(f'ERROR: {smil} returns status of {r.status_code}', True)
             return None
         save_cookies(self.session.cookies)
 
@@ -321,6 +320,7 @@ class CBC:
         src = video.attributes['src'].value
         return src
 
+    @staticmethod
     def get_session():
         """Get a requests session object with CBC cookies."""
         sess = requests.Session()
