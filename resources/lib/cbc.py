@@ -174,13 +174,15 @@ class CBC:
         """
         sess = requests.Session()
 
-        if callback: callback(0)
+        if callback:
+            callback(0)
         gw_req_id = CBC.azure_authorize_authorize(sess)
         if not gw_req_id:
             log('Authorization "authorize" step failed', True)
             return False
 
-        if callback: callback(20)
+        if callback:
+            callback(20)
         cookies = sess.cookies.get_dict()
         if 'x-ms-cpim-csrf' not in cookies:
             log('Unable to get csrt token for self asserted', True)
@@ -203,18 +205,21 @@ class CBC:
         b64_tid = b64_tid.rstrip('=')
         tx_arg = f'StateProperties={b64_tid}'
 
-        if callback: callback(40)
+        if callback:
+            callback(40)
         if not CBC.azure_authorize_self_asserted(sess, username, tx_arg):
             log('Authorization "SelfAsserted" step failed', True)
             return False
 
-        if callback: callback(60)
+        if callback:
+            callback(60)
         gw_req_id = CBC.azure_authorize_confirmed(sess, tx_arg)
         if not gw_req_id:
             log('Authorization "confirmed" step failed', True)
             return False
 
-        if callback: callback(80)
+        if callback:
+            callback(80)
         if not CBC.azure_authorize_self_asserted(sess, username, tx_arg, password):
             log('Authorization "SelfAsserted" step failed', True)
             return False
@@ -223,11 +228,13 @@ class CBC:
             log('Authorization "confirmed" step failed', True)
             return False
 
-        if callback: callback(90)
+        if callback:
+            callback(90)
         claims_token = self.get_claims_token(access_token)
 
         saveAuthorization({'token': access_token, 'claims': claims_token})
-        if callback: callback(100)
+        if callback:
+            callback(100)
 
         return True
 
@@ -238,7 +245,7 @@ class CBC:
         params = {'device': 'web'}
         req = self.session.get(PROFILE_URL, headers=headers, params=params)
         if not req.status_code == 200:
-            log('{} returns status {}'.format(req.url, req.status_code), True)
+            log(f'{req.url} returns status {req.status_code}', True)
             return None
         return json.loads(req.content)['claimsToken']
 
@@ -307,14 +314,14 @@ class CBC:
 
     def parse_smil(self, smil):
         """Parse a SMIL file for the video."""
-        r = self.session.get(smil)
+        resp = self.session.get(smil)
 
-        if not r.status_code == 200:
-            log(f'ERROR: {smil} returns status of {r.status_code}', True)
+        if not resp.status_code == 200:
+            log(f'ERROR: {smil} returns status of {resp.status_code}', True)
             return None
         save_cookies(self.session.cookies)
 
-        dom = parseString(r.content)
+        dom = parseString(resp.content)
         seq = dom.getElementsByTagName('seq')[0]
         video = seq.getElementsByTagName('video')[0]
         src = video.attributes['src'].value
