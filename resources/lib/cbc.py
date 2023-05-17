@@ -42,7 +42,6 @@ SCOPES = 'openid '\
         'https://rcmnb2cprod.onmicrosoft.com/84593b65-0ef6-4a72-891c-d351ddd50aab/toutv-profiling '\
         'https://rcmnb2cprod.onmicrosoft.com/84593b65-0ef6-4a72-891c-d351ddd50aab/testapiwithjwtendpoint.admin '\
         'https://rcmnb2cprod.onmicrosoft.com/84593b65-0ef6-4a72-891c-d351ddd50aab/id.account.info'
-                # X='https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cbc18070/b2c_1a_oidcdiscoveryendpoint_stub/oauth2/v2.0/authorize'
 AUTHORIZE_LOGIN = 'https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cbc18070/B2C_1A_ExternalClient_FrontEnd_Login_CBC/oauth2/v2.0/authorize'
 SELF_ASSERTED_LOGIN = 'https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cbc18070/B2C_1A_ExternalClient_FrontEnd_Login_CBC/SelfAsserted'
 CONFIRM_LOGIN = 'https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cbc18070/B2C_1A_ExternalClient_FrontEnd_Login_CBC/api/SelfAsserted/confirmed'
@@ -50,7 +49,6 @@ SIGNIN_LOGIN = 'https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cb
 RADIUS_LOGIN_FMT = 'https://api.loginradius.com/identity/v2/auth/login?{}'
 RADIUS_JWT_FMT = 'https://cloud-api.loginradius.com/sso/jwt/api/token?{}'
 TOKEN_URL = 'https://services.radio-canada.ca/ott/cbc-api/v2/token'
-# PROFILE_URL = 'https://services.radio-canada.ca/ott/cbc-api/v2/profile'
 PROFILE_URL = 'https://services.radio-canada.ca/ott/subscription/v2/gem/subscriber/profile'
 
 
@@ -178,13 +176,13 @@ class CBC:
         """
         sess = requests.Session()
 
-        if callback:
-            callback(0)
+        if callback: callback(0)
         gw_req_id = CBC.azure_authorize_authorize(sess)
         if not gw_req_id:
             log('Authorization "authorize" step failed', True)
             return False
 
+        if callback: callback(20)
         cookies = sess.cookies.get_dict()
         if 'x-ms-cpim-csrf' not in cookies:
             log('Unable to get csrt token for self asserted', True)
@@ -207,15 +205,18 @@ class CBC:
         b64_tid = b64_tid.rstrip('=')
         tx_arg = f'StateProperties={b64_tid}'
 
+        if callback: callback(40)
         if not CBC.azure_authorize_self_asserted(sess, username, tx_arg):
             log('Authorization "SelfAsserted" step failed', True)
             return False
 
+        if callback: callback(60)
         gw_req_id = CBC.azure_authorize_confirmed(sess, tx_arg)
         if not gw_req_id:
             log('Authorization "confirmed" step failed', True)
             return False
 
+        if callback: callback(80)
         if not CBC.azure_authorize_self_asserted(sess, username, tx_arg, password):
             log('Authorization "SelfAsserted" step failed', True)
             return False
@@ -224,9 +225,11 @@ class CBC:
             log('Authorization "confirmed" step failed', True)
             return False
 
+        if callback: callback(90)
         claims_token = self.get_claims_token(access_token)
 
         saveAuthorization({'token': access_token, 'claims': claims_token})
+        if callback: callback(100)
 
         return True
 

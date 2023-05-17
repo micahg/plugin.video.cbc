@@ -46,7 +46,8 @@ def authorize():
         password = None
         username = None
 
-    if not cbc.authorize(username, password, prog.update):
+    # if not cbc.authorize(username, password, prog.update):
+    if not cbc.azure_authorize(username, password, prog.update):
         log('(authorize) unable to authorize', True)
         prog.close()
         xbmcgui.Dialog().ok(getString(30002), getString(30002))
