@@ -1,5 +1,4 @@
 """Module for general CBC stuff"""
-from datetime import datetime
 from uuid import uuid4
 from base64 import b64encode, b64decode
 import http.client as http_client
@@ -51,7 +50,8 @@ SIGNIN_LOGIN = 'https://login.cbc.radio-canada.ca/bef1b538-1950-4283-9b27-b096cb
 RADIUS_LOGIN_FMT = 'https://api.loginradius.com/identity/v2/auth/login?{}'
 RADIUS_JWT_FMT = 'https://cloud-api.loginradius.com/sso/jwt/api/token?{}'
 TOKEN_URL = 'https://services.radio-canada.ca/ott/cbc-api/v2/token'
-PROFILE_URL = 'https://services.radio-canada.ca/ott/cbc-api/v2/profile'
+# PROFILE_URL = 'https://services.radio-canada.ca/ott/cbc-api/v2/profile'
+PROFILE_URL = 'https://services.radio-canada.ca/ott/subscription/v2/gem/subscriber/profile'
 
 
 class CBC:
@@ -116,9 +116,8 @@ class CBC:
             return False
         return True
 
-
     @staticmethod
-    def azure_authorize_confirmed(sess: requests.Session, tx_arg: str, req_id: str):
+    def azure_authorize_confirmed(sess: requests.Session, tx_arg: str):
         """
         Make the third authorization call.
         @param sess The requests session
@@ -144,7 +143,7 @@ class CBC:
         return resp.headers['x-ms-gateway-requestid']
 
     @staticmethod
-    def azure_authorize_sign_in(sess: requests.Session, tx_arg: str, req_id: str):
+    def azure_authorize_sign_in(sess: requests.Session, tx_arg: str):
         """
         Make the third authorization call.
         @param sess The requests session
@@ -212,7 +211,7 @@ class CBC:
             log('Authorization "SelfAsserted" step failed', True)
             return False
 
-        gw_req_id = CBC.azure_authorize_confirmed(sess, tx_arg, gw_req_id)
+        gw_req_id = CBC.azure_authorize_confirmed(sess, tx_arg)
         if not gw_req_id:
             log('Authorization "confirmed" step failed', True)
             return False
@@ -220,12 +219,14 @@ class CBC:
         if not CBC.azure_authorize_self_asserted(sess, username, tx_arg, password):
             log('Authorization "SelfAsserted" step failed', True)
             return False
-        access_token, id_token = CBC.azure_authorize_sign_in(sess, tx_arg, gw_req_id)
+        access_token, id_token = CBC.azure_authorize_sign_in(sess, tx_arg)
         if not access_token or not id_token:
             log('Authorization "confirmed" step failed', True)
             return False
 
-        saveAuthorization({'access': access_token, 'id': id_token})
+        claims_token = self.get_claims_token(access_token)
+
+        saveAuthorization({'token': access_token, 'claims': claims_token})
 
         return True
 
@@ -279,7 +280,7 @@ class CBC:
         url = RADIUS_LOGIN_FMT.format(query)
         req = self.session.post(url, json=data)
         if not req.status_code == 200:
-            log('{} returns status {}'.format(req.url, req.status_code), True)
+            log('{req.url} returns status {req.status_code}', True)
             return None
 
         token = json.loads(req.content)['access_token']
@@ -311,8 +312,10 @@ class CBC:
 
     def get_claims_token(self, access_token):
         """Get the claims token for tied to the access token."""
-        headers = {'ott-access-token': access_token}
-        req = self.session.get(PROFILE_URL, headers=headers)
+        # headers = {'ott-access-token': access_token}
+        headers = {'Authorization': f'Bearer {access_token}'}
+        params = {'device': 'web'}
+        req = self.session.get(PROFILE_URL, headers=headers, params=params)
         if not req.status_code == 200:
             log('{} returns status {}'.format(req.url, req.status_code), True)
             return None
@@ -392,8 +395,6 @@ class CBC:
         seq = dom.getElementsByTagName('seq')[0]
         video = seq.getElementsByTagName('video')[0]
         src = video.attributes['src'].value
-        title = video.attributes['title'].value
-        abstract = video.attributes['abstract'].value
         return src
 
     def get_session():

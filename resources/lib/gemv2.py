@@ -43,22 +43,22 @@ class GemV2:
     @staticmethod
     def get_episode(url):
         """Get a Gem V2 episode by URL."""
-        # auth = loadAuthorization()
+        auth = loadAuthorization()
 
         # # if we have no authorization, return none to for the UI to authorize
         # if auth is None:
         #     return None
 
-        # headers = {}
-        # if 'token' in auth:
-        #     headers['Authorization'] = 'Bearer {}'.format(auth['token'])
+        headers = {}
+        if 'token' in auth:
+            headers['Authorization'] = 'Bearer {}'.format(auth['token'])
 
-        # if 'claims' in auth:
-        #     headers['x-claims-token'] = auth['claims']
+        if 'claims' in auth:
+            headers['x-claims-token'] = auth['claims']
 
-        # resp = requests.get(url, headers=headers)
-        resp = requests.get(url)
-        return json.loads(resp.content)
+        resp = requests.get(url, headers=headers)
+        js_res = json.loads(resp.content)
+        return js_res
 
     @staticmethod
     def get_category(category_id):
