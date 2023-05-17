@@ -57,8 +57,7 @@ class GemV2:
             headers['x-claims-token'] = auth['claims']
 
         resp = requests.get(url, headers=headers)
-        js_res = json.loads(resp.content)
-        return js_res
+        return json.loads(resp.content)
 
     @staticmethod
     def get_category(category_id):

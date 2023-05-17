@@ -240,7 +240,6 @@ class CBC:
 
     def get_claims_token(self, access_token):
         """Get the claims token for tied to the access token."""
-        # headers = {'ott-access-token': access_token}
         headers = {'Authorization': f'Bearer {access_token}'}
         params = {'device': 'web'}
         req = self.session.get(PROFILE_URL, headers=headers, params=params)
