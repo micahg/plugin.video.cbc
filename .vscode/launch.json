@@ -32,6 +32,15 @@
             "justMyCode": true
         },
         {
+            "name": "Python: Live Channels",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "args": [ "-c" ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Shows",
             "type": "python",
             "request": "launch",

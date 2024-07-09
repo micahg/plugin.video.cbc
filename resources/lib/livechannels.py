@@ -53,11 +53,15 @@ class LiveChannels:
             #https://services.radio-canada.ca/media/validation/v2/?appCode=medianetlive&connectionType=hd&deviceType=ipad&idMedia=15732&multibitrate=true&output=json&tech=hls&manifestType=desktop
 
             # https://gem.cbc.ca/_next/static/chunks/c93403b3.adc94895e46a3939.js has client key (just showed up in HAR)
-            channel_dict = {
-                **channel,
-                'name': channel['title'],
-                'logo': image,
+            values = {
+                'id': channel['idMedia'],
+                'image': image,
                 'labels': urlencode(labels)
+            }
+            channel_dict = {
+                'name': channel['title'],
+                'stream': 'plugin://plugin.video.cbc//channels/play?' + urlencode(values),
+                'logo': image,
             }
 
             # Use "CBC Toronto" instead of "Toronto"
