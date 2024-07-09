@@ -28,6 +28,6 @@
     <forum>https://forum.kodi.tv/showthread.php?tid=328421</forum>
     <website>https://watch.cbc.ca/</website>
     <source>https://github.com/micahg/plugin.video.cbc</source>
-    <news>- Fix a crash handling EPG HTML that has no useful information</news>
+    <news>- Fix live channels and IPTV</news>
   </extension>
 </addon>

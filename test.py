@@ -48,7 +48,7 @@ if options.guide:
 elif options.iptv:
     live = LiveChannels()
     for channel in live.get_iptv_channels():
-        id, name = itemgetter('idMedia', 'name')(channel)
+        id, name = itemgetter('id', 'name')(channel)
         print(f'{id} - {name}')
 elif options.channel:
     live = LiveChannels()

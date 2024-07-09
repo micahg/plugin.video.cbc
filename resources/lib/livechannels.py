@@ -46,7 +46,7 @@ class LiveChannels:
             callsign = CBC.get_callsign(channel)
 
             # if the user has omitted this from the list of their channels, don't populate it
-            if callsign in blocked:
+            if f'{callsign}' in blocked:
                 continue
             labels = CBC.get_labels(channel)
             image = cbc.get_image(channel)
