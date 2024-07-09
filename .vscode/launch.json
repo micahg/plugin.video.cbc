@@ -23,6 +23,15 @@
             "justMyCode": true
         },
         {
+            "name": "Python: Channel",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "args": [ "-I", "15732" ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Shows",
             "type": "python",
             "request": "launch",

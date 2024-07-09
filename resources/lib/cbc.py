@@ -258,6 +258,10 @@ class CBC:
             return item['cbc$staticImage']
         if 'cbc$featureImage' in item:
             return item['cbc$featureImage']
+        if 'images' in item:
+            if 'card' in item['images']:
+                if 'url' in item['images']['card']:
+                    return item['images']['card']['url']
         return None
 
     @staticmethod

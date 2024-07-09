@@ -7,8 +7,8 @@ import requests
 from resources.lib.utils import save_cookies, loadCookies, log, get_iptv_channels_file
 from resources.lib.cbc import CBC
 
-LIST_URL = 'https://tpfeed.cbc.ca/f/ExhSPC/t_t3UKJR6MAT?pretty=true&sort=pubDate%7Cdesc'
-LIST_ELEMENT = 'entries'
+LIST_URL = 'https://services.radio-canada.ca/ott/catalog/v2/gem/home?device=web'
+LIST_ELEMENT = '2415871718'
 
 class LiveChannels:
     """Class for live channels."""
@@ -30,34 +30,34 @@ class LiveChannels:
             return None
         save_cookies(self.session.cookies)
 
-        items = json.loads(resp.content)[LIST_ELEMENT]
-        return items
+        for result in json.loads(resp.content)['lineups']['results']:
+            if result['key'] == LIST_ELEMENT:
+                return result['items']
+        return None
 
     def get_iptv_channels(self):
         """Get the channels in a IPTV Manager compatible list."""
         cbc = CBC()
         channels = self.get_live_channels()
-        blocked = self.get_blocked_iptv_channels()
+        channels = [channel for channel in channels if channel['feedType'].lower() == 'livelinear']
+        # blocked = self.get_blocked_iptv_channels()
         result = []
         for channel in channels:
-            callsign = CBC.get_callsign(channel)
-
-            # if the user has omitted this from the list of their channels, don't populate it
-            if callsign in blocked:
-                continue
-
             labels = CBC.get_labels(channel)
             image = cbc.get_image(channel)
-            values = {
-                'url': channel['content'][0]['url'],
-                'image': image,
-                'labels': urlencode(labels)
-            }
+
+            # this one has imageHR which is a better graphic for the logo
+            #https://services.radio-canada.ca/media/meta/v1/index.ashx?appCode=medianetlive&idMedia=15732&output=jsonObject
+
+            # this one requires auth but gives back the HLS stream but requires Authorization: Client-Key asdfasdf
+            #https://services.radio-canada.ca/media/validation/v2/?appCode=medianetlive&connectionType=hd&deviceType=ipad&idMedia=15732&multibitrate=true&output=json&tech=hls&manifestType=desktop
+
+            # https://gem.cbc.ca/_next/static/chunks/c93403b3.adc94895e46a3939.js has client key (just showed up in HAR)
             channel_dict = {
+                **channel,
                 'name': channel['title'],
-                'stream': 'plugin://plugin.video.cbc/smil?' + urlencode(values),
-                'id': callsign,
-                'logo': image
+                'logo': image,
+                'labels': urlencode(labels)
             }
 
             # Use "CBC Toronto" instead of "Toronto"
@@ -67,9 +67,19 @@ class LiveChannels:
 
         return result
 
+    def get_channel_stream(self, id):
+        url = f'https://services.radio-canada.ca/media/validation/v2/?appCode=medianetlive&connectionType=hd&deviceType=ipad&idMedia={id}&multibitrate=true&output=json&tech=hls&manifestType=desktop'
+        resp = self.session.get(url)
+        if not resp.status_code == 200:
+            log('ERROR: {} returns status of {}'.format(LIST_URL, resp.status_code), True)
+            return None
+        save_cookies(self.session.cookies)
+        return json.loads(resp.content)['url']
+
     @staticmethod
     def get_blocked_iptv_channels():
         """Get the list of blocked channels."""
+        # TODO switch this to use the channel idMedia value (a number)
         chan_file = get_iptv_channels_file()
         try:
             with open(get_iptv_channels_file(), 'r') as chan_file:
