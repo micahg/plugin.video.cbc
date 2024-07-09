@@ -69,7 +69,7 @@ class LiveChannels:
             }
             channel_dict = {
                 'name': channel['title'],
-                'stream': 'plugin://plugin.video.cbc//channels/play?' + urlencode(values),
+                'stream': 'plugin://plugin.video.cbc/channels/play?' + urlencode(values),
                 'id': callsign,
                 'logo': image,
             }
