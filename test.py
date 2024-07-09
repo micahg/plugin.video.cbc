@@ -44,8 +44,7 @@ if options.authorize:
     print('Authorization successful')
     sys.exit(0)
 if options.guide:
-    epg = get_iptv_epg()
-    sys.exit(0)
+    get_iptv_epg()
 elif options.iptv:
     live = LiveChannels()
     for channel in live.get_iptv_channels():

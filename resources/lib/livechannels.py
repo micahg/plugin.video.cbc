@@ -40,9 +40,14 @@ class LiveChannels:
         cbc = CBC()
         channels = self.get_live_channels()
         channels = [channel for channel in channels if channel['feedType'].lower() == 'livelinear']
-        # blocked = self.get_blocked_iptv_channels()
+        blocked = self.get_blocked_iptv_channels()
         result = []
         for channel in channels:
+            callsign = CBC.get_callsign(channel)
+
+            # if the user has omitted this from the list of their channels, don't populate it
+            if callsign in blocked:
+                continue
             labels = CBC.get_labels(channel)
             image = cbc.get_image(channel)
 
@@ -53,14 +58,19 @@ class LiveChannels:
             #https://services.radio-canada.ca/media/validation/v2/?appCode=medianetlive&connectionType=hd&deviceType=ipad&idMedia=15732&multibitrate=true&output=json&tech=hls&manifestType=desktop
 
             # https://gem.cbc.ca/_next/static/chunks/c93403b3.adc94895e46a3939.js has client key (just showed up in HAR)
+
+            # THE FORMAT OF THESE IS VERY IMPORTANT
+            # - values is passed to /channels/play in default.py
+            # - channel_dict is used by the IPTVManager for the guide and stream is how the IPTV manager calls us back to play something
             values = {
-                'id': channel['idMedia'],
+                'id': callsign,
                 'image': image,
                 'labels': urlencode(labels)
             }
             channel_dict = {
                 'name': channel['title'],
                 'stream': 'plugin://plugin.video.cbc//channels/play?' + urlencode(values),
+                'id': callsign,
                 'logo': image,
             }
 
@@ -69,6 +79,7 @@ class LiveChannels:
                 channel_dict['name'] = 'CBC {}'.format(channel_dict['name'])
             result.append(channel_dict)
 
+        log(f'MICAH sending ${result}')
         return result
 
     def get_channel_stream(self, id):
