@@ -1,4 +1,5 @@
 """Module for live channels."""
+from concurrent import futures
 import json
 from urllib.parse import urlencode
 
@@ -30,10 +31,23 @@ class LiveChannels:
             return None
         save_cookies(self.session.cookies)
 
+        ret = None
         for result in json.loads(resp.content)['lineups']['results']:
             if result['key'] == LIST_ELEMENT:
-                return result['items']
-        return None
+                ret = result['items']
+
+        future_to_callsign = {}
+        with futures.ThreadPoolExecutor(max_workers=20) as executor:
+            for i, channel in enumerate(ret):
+                callsign = CBC.get_callsign(channel)
+                future = executor.submit(self.get_channel_metadata, callsign)
+                future_to_callsign[future] = i
+
+        for future in futures.as_completed(future_to_callsign):
+            i = future_to_callsign[future]
+            metadata = future.result()
+            ret[i]['image'] = metadata['Metas']['imageHR']
+        return ret
 
     def get_iptv_channels(self):
         """Get the channels in a IPTV Manager compatible list."""
@@ -48,14 +62,12 @@ class LiveChannels:
             # if the user has omitted this from the list of their channels, don't populate it
             if f'{callsign}' in blocked:
                 continue
+
             labels = CBC.get_labels(channel)
             image = cbc.get_image(channel)
 
-            # this one has imageHR which is a better graphic for the logo
-            #https://services.radio-canada.ca/media/meta/v1/index.ashx?appCode=medianetlive&idMedia=15732&output=jsonObject
-
             # this one requires auth but gives back the HLS stream but requires Authorization: Client-Key asdfasdf
-            #https://services.radio-canada.ca/media/validation/v2/?appCode=medianetlive&connectionType=hd&deviceType=ipad&idMedia=15732&multibitrate=true&output=json&tech=hls&manifestType=desktop
+            # https://services.radio-canada.ca/media/validation/v2/?appCode=medianetlive&connectionType=hd&deviceType=ipad&idMedia=15732&multibitrate=true&output=json&tech=hls&manifestType=desktop
 
             # https://gem.cbc.ca/_next/static/chunks/c93403b3.adc94895e46a3939.js has client key (just showed up in HAR)
 
@@ -90,6 +102,15 @@ class LiveChannels:
             return None
         save_cookies(self.session.cookies)
         return json.loads(resp.content)['url']
+
+    def get_channel_metadata(self, id):
+        url = f'https://services.radio-canada.ca/media/meta/v1/index.ashx?appCode=medianetlive&idMedia={id}&output=jsonObject'
+        resp = self.session.get(url)
+        if not resp.status_code == 200:
+            log('ERROR: {} returns status of {}'.format(LIST_URL, resp.status_code), True)
+            return None
+        save_cookies(self.session.cookies)
+        return json.loads(resp.content)
 
     @staticmethod
     def get_blocked_iptv_channels():

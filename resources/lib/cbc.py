@@ -259,6 +259,8 @@ class CBC:
             return item['cbc$staticImage']
         if 'cbc$featureImage' in item:
             return item['cbc$featureImage']
+        if 'image' in item:
+            return item['image']
         if 'images' in item:
             if 'card' in item['images']:
                 if 'url' in item['images']['card']:
