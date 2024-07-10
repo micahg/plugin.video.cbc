@@ -66,11 +66,6 @@ class LiveChannels:
             labels = CBC.get_labels(channel)
             image = cbc.get_image(channel)
 
-            # this one requires auth but gives back the HLS stream but requires Authorization: Client-Key asdfasdf
-            # https://services.radio-canada.ca/media/validation/v2/?appCode=medianetlive&connectionType=hd&deviceType=ipad&idMedia=15732&multibitrate=true&output=json&tech=hls&manifestType=desktop
-
-            # https://gem.cbc.ca/_next/static/chunks/c93403b3.adc94895e46a3939.js has client key (just showed up in HAR)
-
             # THE FORMAT OF THESE IS VERY IMPORTANT
             # - values is passed to /channels/play in default.py
             # - channel_dict is used by the IPTVManager for the guide and stream is how the IPTV manager calls us back to play something
