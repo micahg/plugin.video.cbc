@@ -91,7 +91,6 @@ class LiveChannels:
                 channel_dict['name'] = 'CBC {}'.format(channel_dict['name'])
             result.append(channel_dict)
 
-        log(f'MICAH sending ${result}')
         return result
 
     def get_channel_stream(self, id):
@@ -115,7 +114,6 @@ class LiveChannels:
     @staticmethod
     def get_blocked_iptv_channels():
         """Get the list of blocked channels."""
-        # TODO switch this to use the channel idMedia value (a number)
         chan_file = get_iptv_channels_file()
         try:
             with open(get_iptv_channels_file(), 'r') as chan_file:
