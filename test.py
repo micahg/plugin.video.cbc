@@ -11,7 +11,8 @@ parser.add_option('-u', '--username', type='string', dest='username', help='CBC 
 parser.add_option('-p', '--password', type='string', dest='password', help='CBC password')
 parser.add_option('-g', '--guide', action='store_true', dest='guide', help="run guide code")
 parser.add_option('-l', '--live-programs', action='store_true', dest='progs')
-parser.add_option('-i', '--iptv', action='store_true', dest='iptv')
+parser.add_option('-i', '--iptv', action='store_true', dest='iptv', help="IPTV Channel List")
+parser.add_option('-I', '--iptv-channel', type='string', dest='channel', help="IPTV Channel ID")
 parser.add_option('-c', '--channels', action='store_true', dest='chans')
 parser.add_option('-C', '--category', action='store', dest='category')
 parser.add_option('-v', '--video', action='store_true', dest='video')
@@ -44,12 +45,18 @@ if options.authorize:
     sys.exit(0)
 if options.guide:
     get_iptv_epg()
-    sys.exit(0)
 elif options.iptv:
     live = LiveChannels()
-    live.get_iptv_channels()
+    for channel in live.get_iptv_channels():
+        id, name = itemgetter('id', 'name')(channel)
+        print(f'{id} - {name}')
+elif options.channel:
+    live = LiveChannels()
+    stream = live.get_channel_stream(options.channel)
+    print(stream)    
 elif options.chans:
     res = chans.get_live_channels()
+    print(res)
 elif options.show:
     show_layout = GemV2.get_show_layout_by_id(options.show)
     show = {k: v for (k, v) in show_layout.items() if k not in ['sponsors', 'seasons']}
