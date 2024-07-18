@@ -19,12 +19,12 @@ from resources.lib.iptvmanager import IPTVManager
 
 getString = xbmcaddon.Addon().getLocalizedString
 LIVE_CHANNELS = getString(30004)
-GEMS = {
-    'featured': getString(30005),
-    'shows': getString(30006),
-    'documentaries': getString(30024),
-    'kids': getString(30025)
-}
+# GEMS = {
+#     'featured': getString(30005),
+#     'shows': getString(30006),
+#     'documentaries': getString(30024),
+#     'kids': getString(30025)
+# }
 SEARCH = getString(30026)
 
 
@@ -56,20 +56,67 @@ def authorize():
     return True
 
 
-def play(labels, image, url):
+def play(labels, image, data):
     """Play the stream using the configured player."""
-    item = xbmcgui.ListItem(labels['title'], path=url)
-    if image:
-        item.setArt({'thumb': image, 'poster': image})
-    item.setInfo(type="Video", infoLabels=labels)
-    helper = inputstreamhelper.Helper('hls')
-    if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
-        item.setProperty('inputstream', 'inputstream.adaptive')
-        item.setProperty('inputstream.adaptive.manifest_type', 'hls')
-    xbmcplugin.setResolvedUrl(plugin.handle, True, item)
-    if url is None:
+    if not 'url' in data:
         xbmcgui.Dialog().ok(getString(30010), getString(30011))
+        return
 
+    (lic, tok) = GemV2.get_stream_drm(data)
+    # item = xbmcgui.ListItem(labels['title'], path=url)
+    # item.setProperty('inputstream', 'inputstream.adaptive')
+    # if image:
+    #     item.setArt({'thumb': image, 'poster': image})
+    # item.setInfo(type="Video", infoLabels=labels)
+    # helper = inputstreamhelper.Helper('hls')
+    # if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
+    #     item.setProperty('inputstream', 'inputstream.adaptive')
+    #     item.setProperty('inputstream.adaptive.manifest_type', 'hls')
+    # there is a bunch of junk returned in the V2 call
+    is_helper = None
+    mime = None
+    drm = None
+    if data['type'] == 'hls':
+        is_helper = inputstreamhelper.Helper('hls')
+    elif data['type'] == 'dash':
+        drm = 'com.widevine.alpha'
+        is_helper = inputstreamhelper.Helper('mpd', drm=drm)
+        mime = 'application/dash+xml'
+
+    if is_helper is None:
+        xbmcgui.Dialog().ok(getString(30027), getString(30027))
+        return
+    
+    if is_helper.check_inputstream():
+        # url,params = data['url']
+        url = data['url']
+        log(f'MICAH trying to play {url}')
+        # log(f'MICAH params are {params}')
+        play_item = xbmcgui.ListItem(path=url)
+        # play_item.setProperty('inputstream.adaptive.stream_params', params)
+        play_item.setInfo(type="Video", infoLabels=labels)
+        if mime:
+            play_item.setMimeType(mime)
+            play_item.setContentLookup(False)
+
+        # KODI_VERSION_MAJOR = 
+        if int(xbmc.getInfoLabel('System.BuildVersion').split('.')[0]) >= 19:
+            play_item.setProperty('inputstream', is_helper.inputstream_addon)
+        else:
+            play_item.setProperty('inputstreamaddon', is_helper.inputstream_addon)
+
+        if drm:
+            play_item.setProperty('inputstream.adaptive.license_type', drm)
+            license_headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/109.0',
+                'Content-Type': 'application/octet-stream',
+                'Origin': 'https://gem.cbc.ca',
+                'x-dt-auth-token': tok, # string containing "Bearer eyJ...."
+            }
+            license_config = [ lic, urlencode(license_headers), 'R{SSM}', 'R']
+            license_key = '|'.join(license_config)
+            play_item.setProperty('inputstream.adaptive.license_key', license_key)
+        xbmcplugin.setResolvedUrl(plugin.handle, True, play_item)
     
 def add_items(handle, items):
     for item in items:
@@ -143,9 +190,12 @@ def live_channels_add_only(station):
 @plugin.route('/channels/play')
 def play_live_channel():
     labels = dict(parse_qsl(plugin.args['labels'][0])) if 'labels' in plugin.args else None
-    chans = LiveChannels()
-    url = chans.get_channel_stream(plugin.args['id'][0])
-    return play(labels, plugin.args['image'][0], url)
+    data = GemV2.get_stream(plugin.args['id'][0], plugin.args['app_code'][0])
+    if not 'url' in data:
+        log('Failed to get stream URL, attempting to authorize.')
+        if authorize():
+            data = GemV2.get_stream(plugin.args['id'][0], plugin.args['app_code'][0])
+    return play(labels, plugin.args['image'][0] if 'image' in plugin.args else None, data)
 
 @plugin.route('/channels')
 def live_channels_menu():
@@ -169,7 +219,7 @@ def live_channels_menu():
             (getString(30017), 'RunPlugin({})'.format(plugin.url_for(live_channels_add_only, callsign))),
         ])
         xbmcplugin.addDirectoryItem(plugin.handle,
-                                    plugin.url_for(play_live_channel, id=channel['idMedia'],
+                                    plugin.url_for(play_live_channel, id=channel['idMedia'], app_code='medianetlive',
                                                    labels=urlencode(labels), image=image), item, False)
     xbmcplugin.endOfDirectory(plugin.handle)
 
@@ -190,7 +240,7 @@ def gem_episode():
             url = resp['url'] if 'url' in resp else None
 
     labels = episode['labels']
-    play(labels, None, url)
+    play(labels, None, resp)
 
 
 @plugin.route('/gem/show/season')
@@ -303,23 +353,39 @@ def search():
     xbmcplugin.endOfDirectory(handle)
 
 
-@plugin.route('/gem/layout/<layout>')
+        # item.setProperty('IsPlayable', 'true')
+        # labels = GemV2.get_labels(show, episode)
+        # item.setInfo(type="Video", infoLabels=labels)
+@plugin.route('/gem/layout/<path:layout>')
 def layout_menu(layout):
     """Populate the menu with featured items."""
     handle = plugin.handle
     xbmcplugin.setContent(handle, 'videos')
-    layout = GemV2.get_layout(layout)
-    if 'categories' in layout:
-        for category in layout['categories']:
-            item = xbmcgui.ListItem(category['title'])
-            url = plugin.url_for(gem_category_menu, category['id'])
-            xbmcplugin.addDirectoryItem(handle, url, item, True)
-    if 'shelves' in layout:
-        for shelf in layout['shelves']:
-            item = xbmcgui.ListItem(shelf['title'])
-            shelf_items = json.dumps(shelf['items'])
-            url = plugin.url_for(gem_shelf_menu, query=shelf_items)
-            xbmcplugin.addDirectoryItem(handle, url, item, True)
+    # layout = GemV2.get_layout(layout)
+    for f in GemV2.get_format(layout):
+        n = GemV2.normalized_format_item(f)
+        p = GemV2.normalized_format_path(f)
+        item = xbmcgui.ListItem(n['label'])
+        if 'art' in n:
+            item.setArt(n['art'])
+        item.setInfo(type="Video", infoLabels=n['info_labels'])
+        if n['playable']:
+            item.setProperty('IsPlayable', 'true')
+            url = plugin.url_for(play_live_channel, id=p, app_code=n['app_code'])
+        else:
+            url = plugin.url_for(layout_menu, p)
+        xbmcplugin.addDirectoryItem(handle, url, item, not n['playable'])
+    # if 'categories' in layout:
+    #     for category in layout['categories']:
+    #         item = xbmcgui.ListItem(category['title'])
+    #         url = plugin.url_for(gem_category_menu, category['id'])
+    #         xbmcplugin.addDirectoryItem(handle, url, item, True)
+    # if 'shelves' in layout:
+    #     for shelf in layout['shelves']:
+    #         item = xbmcgui.ListItem(shelf['title'])
+    #         shelf_items = json.dumps(shelf['items'])
+    #         url = plugin.url_for(gem_shelf_menu, query=shelf_items)
+    #         xbmcplugin.addDirectoryItem(handle, url, item, True)
     xbmcplugin.endOfDirectory(handle)
 
 
@@ -334,8 +400,9 @@ def main_menu():
 
     handle = plugin.handle
     xbmcplugin.setContent(handle, 'videos')
-    for key, value in GEMS.items():
-        xbmcplugin.addDirectoryItem(handle, plugin.url_for(layout_menu, key), xbmcgui.ListItem(value), True)
+    for c in GemV2.get_browse():
+        # TODO THERE are images with these
+        xbmcplugin.addDirectoryItem(handle, plugin.url_for(layout_menu, c['url']), xbmcgui.ListItem(c['title']), True)
     xbmcplugin.addDirectoryItem(handle, plugin.url_for(live_channels_menu), xbmcgui.ListItem(LIVE_CHANNELS), True)
     xbmcplugin.addDirectoryItem(handle, plugin.url_for(search), xbmcgui.ListItem(SEARCH), True)
     xbmcplugin.endOfDirectory(handle)

@@ -5,8 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Browse",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "args": [ "-b" ],
+            "console": "integratedTerminal",
+            "justMyCode": true  
+        },
+        {
+            "name": "Python: Shows Format",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "args": [ "-f", "category/shows" ],
+            "console": "integratedTerminal",
+            "justMyCode": true  
+        },        {
             "name": "Python: Guide",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
             "args": [ "-g" ],
@@ -15,7 +32,7 @@
         },
         {
             "name": "Python: IPTV",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
             "args": [ "-i" ],
@@ -24,7 +41,7 @@
         },
         {
             "name": "Python: Channel",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
             "args": [ "-I", "15732" ],
@@ -33,7 +50,7 @@
         },
         {
             "name": "Python: Live Channels",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
             "args": [ "-c" ],
@@ -42,7 +59,7 @@
         },
         {
             "name": "Python: Shows",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
             "args": [ "-s" ],
@@ -50,38 +67,38 @@
             "justMyCode": true
         },
         {
-            "name": "Python: Drama Category",
-            "type": "python",
+            "name": "Python: News and Current Affairs Category",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
-            "args": [ "-C", "shows-categories-drama" ],
+            "args": [ "-C", "shows-categories-news-current-affairs" ],
             "console": "integratedTerminal",
             "justMyCode": true
         },
         {
-            "name": "Python: 21 Thunder",
-            "type": "python",
+            "name": "Python: About that with andrew chang",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
-            "args": [ "-S", "21-thunder" ],
+            "args": [ "-S", "about-that-with-andrew-chang" ],
             "console": "integratedTerminal",
             "justMyCode": true
         },
         {
-            "name": "Python: 21 Thunder Season 1 Episode 8",
-            "type": "python",
+            "name": "Python: About that with andrew chang Season 1 Episode 10124297",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
-            "args": [ "-e", "https://services.radio-canada.ca/media/validation/v2?appCode=gem&idMedia=932802&manifestType=desktop&output=json&tech=hls" ],
+            "args": [ "-e", "https://services.radio-canada.ca/media/validation/v2?appCode=mpx&idMedia=quickturn/10124297&manifestType=desktop&output=json&tech=hls" ],
             "console": "integratedTerminal",
             "justMyCode": true
         },
         {
             "name": "Python: Authorize",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
-            "args": [ "-u", "micahgalizia@gmail.com", "-p", "PASSWORD GOES HERE", "-a" ],
+            "args": [ "-u", "micahgalizia@gmail.com", "-p", "PWD", "-a" ],
             "console": "integratedTerminal",
             "justMyCode": true
         }
