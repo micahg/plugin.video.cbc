@@ -22,7 +22,6 @@ parser.add_option('-v', '--video', action='store_true', dest='video')
 parser.add_option('-s', '--shows', action='store_true', dest='shows')
 parser.add_option('-S', '--show', action='store')
 parser.add_option('-e', '--episode', action='store')
-parser.add_option('-o', '--layout', type='string', dest='layout', help='CBC Gem V2 layout')
 (options, args) = parser.parse_args()
 
 from resources.lib.livechannels import *
@@ -90,34 +89,8 @@ elif options.channel:
 elif options.chans:
     res = chans.get_live_channels()
     print(res)
-elif options.show:
-    show_layout = GemV2.get_show_layout_by_id(options.show)
-    show = {k: v for (k, v) in show_layout.items() if k not in ['sponsors', 'seasons']}
-    for season in show_layout['seasons']:
-        # films seem to have been shoe-horned (with teeth) into the structure oddly -- compensate
-        if season['title'] == 'Film':
-            # gem_add_film_assets(season['assets'])
-            pass
-        else:
-            print(season['id'])
-            for asset in season['assets']:
-                id, title = itemgetter('id', 'title')(asset)
-                url = asset['playSession']['url']
-                print(f'{id} - {title} - {url}')
-elif options.episode:
-    resp = GemV2().get_episode(options.episode)
-    url = None if not resp else resp['url'] if 'url' in resp else None
-    print(url)
-elif options.category:
-    categories = GemV2.get_category(options.category)
-    for show in categories['items']:
-        id, _, title, _, _, tier = show.values()
-        print(f'{id} - {title} ({tier})')
-    sys.exit(0)
 elif options.progs:
     res = events.getLivePrograms()
-elif options.layout:
-    res = GemV2.get_layout(options.layout)
 elif options.video:
     try:
         res = shows.getStream(args[0])
@@ -126,10 +99,6 @@ elif options.video:
         sys.exit(1)
     print(res)
     sys.exit(0)
-elif options.shows:
-    res = GemV2.get_layout('shows')
-    # res = shows.getShows(None if len(args) == 0 else args[0],
-    #                      progress_callback = progress)
 else:
     print('\nPlease specify something to do\n')
     parser.print_help()

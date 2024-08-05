@@ -19,12 +19,6 @@ from resources.lib.iptvmanager import IPTVManager
 
 getString = xbmcaddon.Addon().getLocalizedString
 LIVE_CHANNELS = getString(30004)
-# GEMS = {
-#     'featured': getString(30005),
-#     'shows': getString(30006),
-#     'documentaries': getString(30024),
-#     'kids': getString(30025)
-# }
 SEARCH = getString(30026)
 
 
@@ -63,16 +57,6 @@ def play(labels, image, data):
         return
 
     (lic, tok) = GemV2.get_stream_drm(data)
-    # item = xbmcgui.ListItem(labels['title'], path=url)
-    # item.setProperty('inputstream', 'inputstream.adaptive')
-    # if image:
-    #     item.setArt({'thumb': image, 'poster': image})
-    # item.setInfo(type="Video", infoLabels=labels)
-    # helper = inputstreamhelper.Helper('hls')
-    # if not xbmcaddon.Addon().getSettingBool("ffmpeg") and helper.check_inputstream():
-    #     item.setProperty('inputstream', 'inputstream.adaptive')
-    #     item.setProperty('inputstream.adaptive.manifest_type', 'hls')
-    # there is a bunch of junk returned in the V2 call
     is_helper = None
     mime = None
     drm = None
@@ -122,19 +106,13 @@ def add_items(handle, items):
     for item in items:
         list_item = xbmcgui.ListItem(item['title'])
         list_item.setInfo(type="Video", infoLabels=CBC.get_labels(item))
-        image = item['image'].replace('(Size)', '224')
+        image = item['image']['url'].replace('(Size)', '224')
         list_item.setArt({'thumb': image, 'poster': image})
         item_type = item['type']
         is_folder = True
-        if item_type == 'SHOW':
-            url = plugin.url_for(gem_show_menu, item['id'])
-        elif item_type == 'ASSET':
-            url = plugin.url_for(gem_asset, item['id'])
-            list_item.setProperty('IsPlayable', 'true')
-            is_folder = False
-        elif item_type == 'SEASON':
-            # ignore the season and go to the show (its what the web UI does)
-            url = plugin.url_for(gem_show_menu, item['id'].split('/')[0])
+        if item_type.lower() == 'show' or item_type.lower() == 'media':
+            p = GemV2.normalized_format_path(item)
+            url = plugin.url_for(layout_menu, p)
         else:
             log(f'Unable to handle shelf item type "{item_type}".', True)
             url = None
@@ -224,126 +202,6 @@ def live_channels_menu():
     xbmcplugin.endOfDirectory(plugin.handle)
 
 
-@plugin.route('/gem/show/episode')
-def gem_episode():
-    """Play an episode."""
-    json_str = plugin.args['query'][0]
-    episode = json.loads(json_str)
-
-    # get the url, and failing that, attempt authorization, then retry
-    resp = GemV2().get_episode(episode['url'])
-    url = None if not resp else resp['url'] if 'url' in resp else None
-    if not url:
-        log('Failed to get stream URL, attempting to authorize.')
-        if authorize():
-            resp = GemV2().get_episode(episode['url'])
-            url = resp['url'] if 'url' in resp else None
-
-    labels = episode['labels']
-    play(labels, None, resp)
-
-
-@plugin.route('/gem/show/season')
-def gem_show_season():
-    """Create a menu for a show season."""
-    xbmcplugin.setContent(plugin.handle, 'videos')
-    json_str = plugin.args['query'][0]
-    # remember show['season'] is season details but there is general show info in show as well
-    show = json.loads(json_str)
-    for episode in show['season']['assets']:
-        item = xbmcgui.ListItem(episode['title'])
-        image = episode['image'].replace('(Size)', '224')
-        item.setArt({'thumb': image, 'poster': image})
-        item.setProperty('IsPlayable', 'true')
-        labels = GemV2.get_labels(show, episode)
-        item.setInfo(type="Video", infoLabels=labels)
-        episode_info = {'url': episode['playSession']['url'], 'labels': labels}
-        url = plugin.url_for(gem_episode, query=json.dumps(episode_info))
-        xbmcplugin.addDirectoryItem(plugin.handle, url, item, False)
-    xbmcplugin.endOfDirectory(plugin.handle)
-
-
-@plugin.route('/gem/asset/<path:asset>')
-def gem_asset(asset):
-    asset_layout = GemV2.get_asset_by_id(asset)
-    resp = GemV2.get_episode(asset_layout['playSession']['url'])
-    url = None if not resp else resp['url'] if 'url' in resp else None
-    if not url:
-        log('Failed to get stream URL, attempting to authorize.')
-        if authorize():
-            resp = GemV2().get_episode(asset_layout['playSession']['url'])
-            url = resp['url'] if 'url' in resp else None
-    labels = GemV2.get_labels({'title': asset_layout['series']}, asset_layout)
-    image = asset_layout['image']
-    play(labels, image, url)
-
-
-def gem_add_film_assets(assets):
-    for asset in assets:
-        labels = GemV2.get_labels({'title': asset['series']}, asset)
-        image = asset['image']
-        item = xbmcgui.ListItem(labels['title'])
-        item.setInfo(type="Video", infoLabels=labels)
-        item.setArt({'thumb': image, 'poster': image})
-        item.setProperty('IsPlayable', 'true')
-        episode_info = {'url': asset['playSession']['url'], 'labels': labels}
-        url = plugin.url_for(gem_episode, query=json.dumps(episode_info))
-        xbmcplugin.addDirectoryItem(plugin.handle, url, item, False)
-
-
-@plugin.route('/gem/show/<show_id>')
-def gem_show_menu(show_id):
-    """Create a menu for a shelfs items."""
-    xbmcplugin.setContent(plugin.handle, 'videos')
-    show_layout = GemV2.get_show_layout_by_id(show_id)
-    show = {k: v for (k, v) in show_layout.items() if k not in ['sponsors', 'seasons']}
-    for season in show_layout['seasons']:
-
-        # films seem to have been shoe-horned (with teeth) into the structure oddly -- compensate
-        if season['title'] == 'Film':
-            gem_add_film_assets(season['assets'])
-        else:
-            labels = GemV2.get_labels(season, season)
-            item = xbmcgui.ListItem(season['title'])
-            item.setInfo(type="Video", infoLabels=labels)
-            image = season['image'].replace('(Size)', '224')
-            item.setArt({'thumb': image, 'poster': image})
-            show['season'] = season
-            url = plugin.url_for(gem_show_season, query=json.dumps(show))
-            xbmcplugin.addDirectoryItem(plugin.handle, url, item, True)
-
-    xbmcplugin.endOfDirectory(plugin.handle)
-
-
-@plugin.route('/gem/shelf')
-def gem_shelf_menu():
-    """Create a menu item for each shelf."""
-    handle = plugin.handle
-    xbmcplugin.setContent(handle, 'videos')
-    json_str = plugin.args['query'][0]
-    shelf_items = json.loads(json_str)
-    add_items(handle, shelf_items)
-    xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
-    xbmcplugin.endOfDirectory(handle)
-
-
-@plugin.route('/gem/categories/<category_id>')
-def gem_category_menu(category_id):
-    """Populate a menu with categorical content."""
-    handle = plugin.handle
-    xbmcplugin.setContent(handle, 'videos')
-    category = GemV2.get_category(category_id)
-    for show in category['items']:
-        item = xbmcgui.ListItem(show['title'])
-        item.setInfo(type="Video", infoLabels=CBC.get_labels(show))
-        image = show['image'].replace('(Size)', '224')
-        item.setArt({'thumb': image, 'poster': image})
-        url = plugin.url_for(gem_show_menu, show['id'])
-        xbmcplugin.addDirectoryItem(handle, url, item, True)
-    xbmcplugin.addSortMethod(handle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
-    xbmcplugin.endOfDirectory(handle)
-
-
 @plugin.route('/gem/search')
 def search():
     handle = plugin.handle
@@ -353,15 +211,11 @@ def search():
     xbmcplugin.endOfDirectory(handle)
 
 
-        # item.setProperty('IsPlayable', 'true')
-        # labels = GemV2.get_labels(show, episode)
-        # item.setInfo(type="Video", infoLabels=labels)
 @plugin.route('/gem/layout/<path:layout>')
 def layout_menu(layout):
     """Populate the menu with featured items."""
     handle = plugin.handle
     xbmcplugin.setContent(handle, 'videos')
-    # layout = GemV2.get_layout(layout)
     for f in GemV2.get_format(layout):
         n = GemV2.normalized_format_item(f)
         p = GemV2.normalized_format_path(f)
@@ -375,17 +229,6 @@ def layout_menu(layout):
         else:
             url = plugin.url_for(layout_menu, p)
         xbmcplugin.addDirectoryItem(handle, url, item, not n['playable'])
-    # if 'categories' in layout:
-    #     for category in layout['categories']:
-    #         item = xbmcgui.ListItem(category['title'])
-    #         url = plugin.url_for(gem_category_menu, category['id'])
-    #         xbmcplugin.addDirectoryItem(handle, url, item, True)
-    # if 'shelves' in layout:
-    #     for shelf in layout['shelves']:
-    #         item = xbmcgui.ListItem(shelf['title'])
-    #         shelf_items = json.dumps(shelf['items'])
-    #         url = plugin.url_for(gem_shelf_menu, query=shelf_items)
-    #         xbmcplugin.addDirectoryItem(handle, url, item, True)
     xbmcplugin.endOfDirectory(handle)
 
 
@@ -401,7 +244,6 @@ def main_menu():
     handle = plugin.handle
     xbmcplugin.setContent(handle, 'videos')
     for c in GemV2.get_browse():
-        # TODO THERE are images with these
         xbmcplugin.addDirectoryItem(handle, plugin.url_for(layout_menu, c['url']), xbmcgui.ListItem(c['title']), True)
     xbmcplugin.addDirectoryItem(handle, plugin.url_for(live_channels_menu), xbmcgui.ListItem(LIVE_CHANNELS), True)
     xbmcplugin.addDirectoryItem(handle, plugin.url_for(search), xbmcgui.ListItem(SEARCH), True)
