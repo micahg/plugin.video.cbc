@@ -2,7 +2,7 @@
 import json
 
 import requests
-
+import re
 from resources.lib.cbc import CBC
 from resources.lib.utils import loadAuthorization, log
 
@@ -68,6 +68,12 @@ class GemV2:
             return content['items']['results']
         
         if 'requestedType' in jsObj and jsObj['requestedType'].lower() == 'season':
+            # find season from url
+            season_no = re.search("s(\d+)($|\?)", url.lower())
+            if season_no is not None:
+                for lineup in content['lineups']:
+                    if lineup['seasonNumber'] == int(season_no.group(1)):
+                        return lineup['items']
             return content['lineups'][0]['items']
         if 'lineups' in content:
             return content['lineups']
