@@ -91,6 +91,7 @@
             "program": "${workspaceFolder}/test.py",
             "args": [ "-e", "https://services.radio-canada.ca/media/validation/v2?appCode=mpx&idMedia=quickturn/10124297&manifestType=desktop&output=json&tech=hls" ],
             "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env",
             "justMyCode": true
         },
         {
@@ -98,9 +99,10 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
-            "args": [ "-u", "micahgalizia@gmail.com", "-p", "PWD", "-a" ],
+            "args": [ "-a" ],
             "console": "integratedTerminal",
-            "justMyCode": true
+            "envFile": "${workspaceFolder}/.env",
+            "justMyCode": true,
         }
     ]
 }

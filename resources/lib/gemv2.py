@@ -68,6 +68,12 @@ class GemV2:
             return content['items']['results']
         
         if 'requestedType' in jsObj and jsObj['requestedType'].lower() == 'season':
+            # Search for the right season:
+            # - lineup url will be something like 'rosemary-barton-live/s02'
+            # - path will be something like 'show/rosemary-barton-live/s02'
+            for lineup in content['lineups']:
+                if 'url' in lineup and lineup['url'] in path:
+                    return lineup['items']
             return content['lineups'][0]['items']
         if 'lineups' in content:
             return content['lineups']

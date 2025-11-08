@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os
 from optparse import OptionParser
 from operator import itemgetter
 from resources.lib.epg import get_iptv_epg
@@ -7,8 +8,10 @@ from resources.lib.epg import get_iptv_epg
 # parse the options
 parser = OptionParser()
 parser.add_option('-a', '--authorize', action='store_true', dest='authorize')
-parser.add_option('-u', '--username', type='string', dest='username', help='CBC username')
-parser.add_option('-p', '--password', type='string', dest='password', help='CBC password')
+parser.add_option('-u', '--username', type='string', dest='username', 
+                  help='CBC username (default: $CBC_USERNAME)')
+parser.add_option('-p', '--password', type='string', dest='password', 
+                  help='CBC password (default: $CBC_PASSWORD)')
 parser.add_option('-b', '--browse', action='store_true')
 parser.add_option('-f', '--format', action='store')
 # ?
@@ -23,6 +26,12 @@ parser.add_option('-s', '--shows', action='store_true', dest='shows')
 parser.add_option('-S', '--show', action='store')
 parser.add_option('-e', '--episode', action='store')
 (options, args) = parser.parse_args()
+
+# Get username and password from environment if not provided via command line
+if not options.username:
+    options.username = os.environ.get('CBC_USERNAME')
+if not options.password:
+    options.password = os.environ.get('CBC_PASSWORD')
 
 from resources.lib.livechannels import *
 # from resources.lib.liveprograms import *
@@ -40,6 +49,9 @@ chans = LiveChannels()
 res = []
 
 if options.authorize:
+    if not options.username or not options.password:
+        print('Error: Username and password required (use -u/-p or set CBC_USERNAME/CBC_PASSWORD)')
+        sys.exit(1)
     if not cbc.azure_authorize(options.username, options.password, progress):
         print('Error: Authorization failed')
         sys.exit(1)
@@ -54,19 +66,21 @@ if options.browse:
         print(a)
     sys.exit(0)
 if options.format:
+    # b = GemV2.get_format('experience/olympics')
     b = GemV2.get_format(options.format)
-    i = 7
-    # i = 0
+    # 8 was Rosemary Barton Live
+    i = 8
     n = GemV2.normalized_format_item(b[i])
     p = GemV2.normalized_format_path(b[i])
     print(n)
     b = GemV2.get_format(p)
-    n = GemV2.normalized_format_item(b[0])
-    p = GemV2.normalized_format_path(b[0])
+    # [2] is season 3
+    n = GemV2.normalized_format_item(b[2])
+    p = GemV2.normalized_format_path(b[2])
     print(n)
     b = GemV2.get_format(p)
-    n = GemV2.normalized_format_item(b[1])
-    p = GemV2.normalized_format_path(b[1])
+    n = GemV2.normalized_format_item(b[4])
+    p = GemV2.normalized_format_path(b[4])
     print(n)
     s = GemV2.get_stream(id=p, app_code=n['app_code'])
     print(f"{s['type']} {s['url']}")
