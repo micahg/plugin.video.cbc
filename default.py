@@ -72,18 +72,13 @@ def play(labels, image, data):
         return
     
     if is_helper.check_inputstream():
-        # url,params = data['url']
         url = data['url']
-        log(f'MICAH trying to play {url}')
-        # log(f'MICAH params are {params}')
         play_item = xbmcgui.ListItem(path=url)
-        # play_item.setProperty('inputstream.adaptive.stream_params', params)
         play_item.setInfo(type="Video", infoLabels=labels)
         if mime:
             play_item.setMimeType(mime)
             play_item.setContentLookup(False)
 
-        # KODI_VERSION_MAJOR = 
         if int(xbmc.getInfoLabel('System.BuildVersion').split('.')[0]) >= 19:
             play_item.setProperty('inputstream', is_helper.inputstream_addon)
         else:
