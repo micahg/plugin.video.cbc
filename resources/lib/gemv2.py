@@ -19,10 +19,15 @@ class GemV2:
     @staticmethod
     def scrape_json(uri, headers=None, params=None):
         resp = CBC.get_session().get(uri, headers=headers, params=params)
+
+        if resp.status_code != 200:
+            log(f'HTTP {resp.status_code} from {uri}', True)
+            return None
+        
         try:
             jsObj = json.loads(resp.content)
         except:
-            log(f'Unable to parse result from {uri}', True)
+            log(f'Unable to parse JSON from {uri} (status {resp.status_code})', True)
             return None
         return jsObj
 
