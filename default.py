@@ -164,7 +164,7 @@ def live_channels_add_only(station):
 def play_live_channel():
     labels = dict(parse_qsl(plugin.args['labels'][0])) if 'labels' in plugin.args else None
     data = GemV2.get_stream(plugin.args['id'][0], plugin.args['app_code'][0])
-    if not 'url' in data:
+    if not data or not 'url' in data:
         log('Failed to get stream URL, attempting to authorize.')
         if authorize():
             data = GemV2.get_stream(plugin.args['id'][0], plugin.args['app_code'][0])
