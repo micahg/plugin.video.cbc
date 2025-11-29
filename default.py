@@ -52,7 +52,7 @@ def authorize():
 
 def play(labels, image, data):
     """Play the stream using the configured player."""
-    if not 'url' in data:
+    if not data or not 'url' in data:
         xbmcgui.Dialog().ok(getString(30010), getString(30011))
         return
 
