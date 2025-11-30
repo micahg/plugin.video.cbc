@@ -66,10 +66,20 @@ if options.browse:
         print(a)
     sys.exit(0)
 if options.format:
-    # b = GemV2.get_format('experience/olympics')
     b = GemV2.get_format(options.format)
-    # 8 was Rosemary Barton Live
-    i = 8
+
+    # CBC content (avoid DRM that Kodi can't handle)
+    title = 'Rosemary Barton Live'
+    i = None
+    for idx, item in enumerate(b):
+        if item.get('title') == title:
+            i = idx
+            break
+    
+    if i is None:
+        print(f"Error: '{title}' not found")
+        sys.exit(1)
+    
     n = GemV2.normalized_format_item(b[i])
     p = GemV2.normalized_format_path(b[i])
     print(n)
