@@ -211,7 +211,13 @@ def layout_menu(layout):
     """Populate the menu with featured items."""
     handle = plugin.handle
     xbmcplugin.setContent(handle, 'videos')
-    for f in GemV2.get_format(layout):
+    items = GemV2.get_format(layout)
+
+    # GEM's show list are not alphabetical and at best random
+    if not GemV2.has_playable(items):
+        xbmcplugin.addSortMethod(handle, xbmcplugin.SORT_METHOD_LABEL)
+
+    for f in items:
         n = GemV2.normalized_format_item(f)
         p = GemV2.normalized_format_path(f)
         item = xbmcgui.ListItem(n['label'])

@@ -162,6 +162,13 @@ class GemV2:
         return retval
 
     @staticmethod
+    def has_playable(items):
+        for item in items:
+            if 'idMedia' in item:
+                return True
+        return False
+
+    @staticmethod
     def normalized_format_path(item):
         if 'idMedia' in item:
             return item['idMedia']
