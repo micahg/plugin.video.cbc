@@ -9,6 +9,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-b" ],
             "console": "integratedTerminal",
             "justMyCode": true  
@@ -18,6 +19,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-f", "category/shows" ],
             "console": "integratedTerminal",
             "justMyCode": true  
@@ -26,6 +28,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-g" ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -35,6 +38,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-i" ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -44,6 +48,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-I", "15732" ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -53,6 +58,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-c" ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -62,6 +68,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-s" ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -71,6 +78,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-C", "shows-categories-news-current-affairs" ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -80,6 +88,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-S", "about-that-with-andrew-chang" ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -89,6 +98,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-e", "https://services.radio-canada.ca/media/validation/v2?appCode=mpx&idMedia=quickturn/10124297&manifestType=desktop&output=json&tech=hls" ],
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/.env",
@@ -99,6 +109,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "args": [ "-a" ],
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/.env",
