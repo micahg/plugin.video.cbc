@@ -206,25 +206,30 @@ def search():
     xbmcplugin.endOfDirectory(handle)
 
 
-@plugin.route('/gem/layout/<path:layout>')
-def layout_menu(layout):
+@plugin.route('/gem/layout/<path:path>')
+def layout_menu(path):
     """Populate the menu with featured items."""
     handle = plugin.handle
     xbmcplugin.setContent(handle, 'videos')
-    items = GemV2.get_format(layout)
+    log(f'Getting format for layout: {path}', True)
+    items = GemV2.get_format(path)
+    log(items)
 
-    # GEM's show list are not alphabetical and at best random
-    if not GemV2.has_playable(items):
+    # GEM's show list are not alphabetical and at best random. Sections
+    # are usually in a logical order with important things first (like
+    # the olympic)
+    if not GemV2.has_playable(items) and not path.startswith('section/'):
         xbmcplugin.addSortMethod(handle, xbmcplugin.SORT_METHOD_LABEL)
 
     for f in items:
         n = GemV2.normalized_format_item(f)
-        p = GemV2.normalized_format_path(f)
+        p = GemV2.normalized_format_path(f, path)
         item = xbmcgui.ListItem(n['label'])
         if 'art' in n:
             item.setArt(n['art'])
         item.setInfo(type="Video", infoLabels=n['info_labels'])
         if n['playable']:
+            log(n, True)
             item.setProperty('IsPlayable', 'true')
             url = plugin.url_for(play_live_channel, id=p, app_code=n['app_code'])
         else:

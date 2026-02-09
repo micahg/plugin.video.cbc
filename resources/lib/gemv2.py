@@ -11,6 +11,7 @@ from resources.lib.utils import loadAuthorization, log
 BROWSE_URI = 'https://services.radio-canada.ca/ott/catalog/v2/gem/browse?device=web'
 FORMAT_BY_ID = 'https://services.radio-canada.ca/ott/catalog/v2/gem/{}?device=web'
 SEARCH_BY_NAME = 'https://services.radio-canada.ca/ott/catalog/v1/gem/search'
+SHOW_BY_ID = 'https://services.radio-canada.ca/ott/catalog/v2/gem/show/{}?device=web'
 
 
 class GemV2:
@@ -18,6 +19,9 @@ class GemV2:
 
     @staticmethod
     def scrape_json(uri, headers=None, params=None):
+        if headers is None:
+            headers = {}
+        headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
         resp = CBC.get_session().get(uri, headers=headers, params=params)
 
         if resp.status_code != 200:
@@ -63,12 +67,55 @@ class GemV2:
     @staticmethod
     def get_format(path):
         """Get a Gem V2 API V2 browse format"""
-        url = FORMAT_BY_ID.format(path)
+        # categories are "category/shows" and have a basic list result, sections, like "section/sports" contain a list of lists.
+        # since we can't nest menus programatically in kodi, we end up having to refetch the with with the selected key. So, we
+        # may have a path like "section/sports/2415872347", which indicates that we want the list in "section/sports" with key "2415872347".
+        log(path, True)
+        key = None
+        fmt = FORMAT_BY_ID
+        part = path.rpartition('/')
+        if '/' in part[0]:
+            # if there is a first part and it has a slash, we may be dealing with a section, eg: section/sports/2415872347
+            path = part[0]
+            key = part[2]
+        elif part[0] == '':
+            # if there is a first part and it's not category or section, its a season, eg: 'curling-canada-vs-sweden-mixed-doubles-round-robin-29364/1'
+            fmt = SHOW_BY_ID
+            path = part[2]
+        elif not part[0] == 'category' and not part[0] == 'section':
+            # fmt = SHOW_BY_ID
+            path = part[0]
+            key = part[2]
+
+        # if there is no first part we may be dealing with a show, eg: snowboard-pgs-mens-womens-final-31718
+        url = fmt.format(path)
         jsObj = GemV2.scrape_json(url)
-        if jsObj is None or 'content' not in jsObj:
+        if jsObj is None:
+            log(f'Unable to get format for path {path} (got no response from {url})')
+            return None
+        if 'lineups' in jsObj:
+            if 'results' not in jsObj['lineups']:
+                log(f'Unable to find key lineups/results in response from {url}')
+                return None
+            results = jsObj['lineups']['results']
+            if key is not None:
+                # log(results, True)
+                # as described above, we have to search through the lineups to find the one with the right key, then return its items
+                for r in results:
+                    if 'key' in r and r['key'] == key:
+                        if 'items' in r:
+                            return r['items']
+                        if 'callToActions' in r:
+                            return [r['callToActions']['primary']]
+                        log(f'Unable to find items or callToAction/primary/url for lineup with key {key} in response from {url}')
+                log(f'Unable to find key {key} in lineups/results from {url}')
+
+            return results
+        elif 'content' in jsObj:
+            content = jsObj['content'][0]
+        else:
             log(f'Unable to find key content in response from {url}')
             return None
-        content = jsObj['content'][0]
         if 'items' in content and 'results' in content['items']:
             return content['items']['results']
         
@@ -81,6 +128,10 @@ class GemV2:
                     return lineup['items']
             return content['lineups'][0]['items']
         if 'lineups' in content:
+            if key is not None:
+                for c in content['lineups']:
+                    if 'seasonNumber' in c and str(c['seasonNumber']) == key:
+                        return c['items']
             return content['lineups']
 
         log(f'Unable to find key content/[0]/items/results in response from {url}')
@@ -129,12 +180,13 @@ class GemV2:
         bits into stuff we can display
         """
         images = item['images'] if 'images' in item else None
+        title = item['label'] if 'label' in item else item['title']
         retval = {
-            'label': item['title'],
+            'label': title,
             'playable': 'idMedia' in item,
             'info_labels': {
-                'tvshowtitle': item['title'],
-                'title': item['title'],
+                'tvshowtitle': title,
+                'title': title,
             }
         }
         if 'description' in item:
@@ -143,7 +195,7 @@ class GemV2:
         if images:
             retval['art'] = {
                 'thumb': images['background']['url'] if 'background' in images else None,
-                'poster': images['card']['url'],
+                'poster': images['card']['url'] if 'card' in images else None,
                 'clearlogo': images['logo']['url'] if 'logo' in images else None,
             }
         if 'metadata' in item:
@@ -157,8 +209,7 @@ class GemV2:
             if 'credits' in meta:
                 retval['info_labels']['cast'] = meta['credits'][0]['peoples'].split(',')
         if 'idMedia' in item:
-            retval['app_code'] = 'medianet' if item['mediaType'] == 'LiveToVod' else 'gem'
-            None
+            retval['app_code'] = 'medianet' if ('mediaType' in item and item['mediaType'] == 'LiveToVod') else 'gem'
         return retval
 
     @staticmethod
@@ -169,11 +220,24 @@ class GemV2:
         return False
 
     @staticmethod
-    def normalized_format_path(item):
+    def normalized_format_path(item, parent_path=None):
         if 'idMedia' in item:
             return item['idMedia']
-        if 'type' in item and item['type'].lower() == 'show':
-            return f'{item["type"]}/{item["url"]}'
+        if 'type' in item:
+            if item['type'].lower() == 'show':
+                return f'{item["type"]}/{item["url"]}'
+            if item['type'].lower() == 'live':
+                return item['url']
+        if 'callToAction' in item:
+            # line-up
+            return item['callToAction']['primary']['url']
+        if 'lineupType' in item:
+            return f'{parent_path}/{item["key"]}'
+        if 'action' in item and item['action'].lower() == 'openurl':
+            return item['url']
+        if 'seasonNumber' in item:
+            # its a season, we just refetch with 
+            return f'{parent_path}/{item["seasonNumber"]}'
         return f'show/{item["url"]}'
 
 
