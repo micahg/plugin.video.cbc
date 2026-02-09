@@ -70,7 +70,10 @@ if options.format:
         # b = GemV2.get_format('experience/olympics')
         b = GemV2.get_format(options.format)
         # 8 was Rosemary Barton Live
-        i = 3
+        for i in range(0, len(b)):
+            if b[i]['url'] == 'rosemary-barton-live':
+                break
+        # i = 1
         n = GemV2.normalized_format_item(b[i])
         p = GemV2.normalized_format_path(b[i], options.format)
         print(n)
@@ -105,7 +108,7 @@ if options.format:
         p = GemV2.normalized_format_path(b[0], p)
         b = GemV2.get_format(p)
         n = GemV2.normalized_format_item(b[0])
-        # p = GemV2.normalized_format_path(b[0], options.format)
+        p = GemV2.normalized_format_path(b[0], p)
         sys.exit(0)
 if options.guide:
     get_iptv_epg()

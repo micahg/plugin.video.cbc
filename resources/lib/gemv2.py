@@ -70,22 +70,38 @@ class GemV2:
         # categories are "category/shows" and have a basic list result, sections, like "section/sports" contain a list of lists.
         # since we can't nest menus programatically in kodi, we end up having to refetch the with with the selected key. So, we
         # may have a path like "section/sports/2415872347", which indicates that we want the list in "section/sports" with key "2415872347".
-        log(path, True)
         key = None
         fmt = FORMAT_BY_ID
         part = path.rpartition('/')
+
+        if path.startswith('category/') or path.startswith('section/') or path.startswith('show/'):
+            fmt = FORMAT_BY_ID
+        else:
+            fmt = SHOW_BY_ID
+            key = part[2] if not part[2] == '' else None
+
         if '/' in part[0]:
             # if there is a first part and it has a slash, we may be dealing with a section, eg: section/sports/2415872347
             path = part[0]
             key = part[2]
         elif part[0] == '':
             # if there is a first part and it's not category or section, its a season, eg: 'curling-canada-vs-sweden-mixed-doubles-round-robin-29364/1'
-            fmt = SHOW_BY_ID
             path = part[2]
-        elif not part[0] == 'category' and not part[0] == 'section':
-            # fmt = SHOW_BY_ID
-            path = part[0]
-            key = part[2]
+
+        # if '/' in part[0]:
+        #     # if there is a first part and it has a slash, we may be dealing with a section, eg: section/sports/2415872347
+        #     path = part[0]
+        #     key = part[2]
+        # elif part[0] == '':
+        #     # if there is a first part and it's not category or section, its a season, eg: 'curling-canada-vs-sweden-mixed-doubles-round-robin-29364/1'
+        #     fmt = SHOW_BY_ID
+        #     path = part[2]
+        # elif not part[0] == 'category' and not part[0] == 'section':
+        #     # fmt = SHOW_BY_ID
+        #     path = part[0]
+        #     key = part[2]
+
+        log(f'{path} {key} {fmt}', True)
 
         # if there is no first part we may be dealing with a show, eg: snowboard-pgs-mens-womens-final-31718
         url = fmt.format(path)
@@ -225,7 +241,7 @@ class GemV2:
             return item['idMedia']
         if 'type' in item:
             if item['type'].lower() == 'show':
-                return f'{item["type"]}/{item["url"]}'
+                return f'{item["type"]}/{item["url"]}'.lower()
             if item['type'].lower() == 'live':
                 return item['url']
         if 'callToAction' in item:
