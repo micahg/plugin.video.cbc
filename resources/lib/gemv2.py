@@ -225,7 +225,12 @@ class GemV2:
             if 'credits' in meta:
                 retval['info_labels']['cast'] = meta['credits'][0]['peoples'].split(',')
         if 'idMedia' in item:
-            retval['app_code'] = 'medianet' if ('mediaType' in item and item['mediaType'] == 'LiveToVod') else 'gem'
+            if 'metadata' in item and 'live' in item['metadata']:
+                retval['app_code'] = 'medianetlive'
+            elif 'mediaType' in item and item['mediaType'] == 'LiveToVod':
+                retval['app_code'] = 'medianet'
+            else:
+                retval['app_code'] = 'gem'
         return retval
 
     @staticmethod
