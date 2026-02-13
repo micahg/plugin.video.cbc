@@ -211,9 +211,7 @@ def layout_menu(path):
     """Populate the menu with featured items."""
     handle = plugin.handle
     xbmcplugin.setContent(handle, 'videos')
-    log(f'Getting format for layout: {path}', True)
     items = GemV2.get_format(path)
-    log(items)
 
     # GEM's show list are not alphabetical and at best random. Sections
     # are usually in a logical order with important things first (like
