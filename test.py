@@ -99,13 +99,11 @@ if options.format:
         # print(f'{n["label"]}')
         p = GemV2.normalized_format_path(b[0], options.format)
         b = GemV2.get_format(p)
-        n = GemV2.normalized_format_item(b[0])
+        # i think these are upcomming
+        idx = 15
+        n = GemV2.normalized_format_item(b[idx])
         print(f'{n["label"]}')
-        p = GemV2.normalized_format_path(b[0], p)
-        b = GemV2.get_format(p)
-        n = GemV2.normalized_format_item(b[0])
-        print(f'{n["label"]}')
-        p = GemV2.normalized_format_path(b[0], p)
+        p = GemV2.normalized_format_path(b[idx], p)
         b = GemV2.get_format(p)
         n = GemV2.normalized_format_item(b[0])
         print(f'{n["label"]}')

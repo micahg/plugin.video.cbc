@@ -1,5 +1,6 @@
 """Module for the V2 Gem API."""
 import json
+from datetime import datetime
 
 import requests
 
@@ -16,6 +17,15 @@ SHOW_BY_ID = 'https://services.radio-canada.ca/ott/catalog/v2/gem/show/{}?device
 
 class GemV2:
     """V2 Gem API class."""
+
+    @staticmethod
+    def iso8601_to_local(dttm):
+        """Convert an ISO 8601 timestamp (UTC or offset-aware) to local time string."""
+        try:
+            local_dt = datetime.fromisoformat(dttm.replace('Z', '+00:00')).astimezone()
+            return local_dt.strftime('%Y-%m-%d %H:%M:%S')
+        except (ValueError, TypeError, AttributeError):
+            return dttm
 
     @staticmethod
     def scrape_json(uri, headers=None, params=None):
@@ -74,11 +84,12 @@ class GemV2:
         fmt = FORMAT_BY_ID
         part = path.rpartition('/')
 
+        # determine which format to use for fetching the data based on the path
         if path.startswith('category/') or path.startswith('section/') or path.startswith('show/'):
             fmt = FORMAT_BY_ID
         else:
             fmt = SHOW_BY_ID
-            key = part[2] if not part[2] == '' else None
+            key = part[2] if not (part[2] == '' or part[2] == path) else None
 
         if '/' in part[0]:
             # if there is a first part and it has a slash, we may be dealing with a section, eg: section/sports/2415872347
@@ -87,19 +98,6 @@ class GemV2:
         elif part[0] == '':
             # if there is a first part and it's not category or section, its a season, eg: 'curling-canada-vs-sweden-mixed-doubles-round-robin-29364/1'
             path = part[2]
-
-        # if '/' in part[0]:
-        #     # if there is a first part and it has a slash, we may be dealing with a section, eg: section/sports/2415872347
-        #     path = part[0]
-        #     key = part[2]
-        # elif part[0] == '':
-        #     # if there is a first part and it's not category or section, its a season, eg: 'curling-canada-vs-sweden-mixed-doubles-round-robin-29364/1'
-        #     fmt = SHOW_BY_ID
-        #     path = part[2]
-        # elif not part[0] == 'category' and not part[0] == 'section':
-        #     # fmt = SHOW_BY_ID
-        #     path = part[0]
-        #     key = part[2]
 
         log(f'{path} {key} {fmt}', True)
 
@@ -144,10 +142,15 @@ class GemV2:
                     return lineup['items']
             return content['lineups'][0]['items']
         if 'lineups' in content:
+            # are we looking for a sepcifci key (eg: season number)
             if key is not None:
                 for c in content['lineups']:
                     if 'seasonNumber' in c and str(c['seasonNumber']) == key:
                         return c['items']
+            # if there is just one lineup item, use it rather than returning a list with one item
+            if len(content['lineups']) == 1 and 'items' in content['lineups'][0] and len(content['lineups'][0]['items']) == 1:
+                return content['lineups'][0]['items']
+
             return content['lineups']
 
         log(f'Unable to find key content/[0]/items/results in response from {url}')
@@ -224,11 +227,13 @@ class GemV2:
                 retval['info_labels']['aired'] = meta['airDate']
             if 'credits' in meta:
                 retval['info_labels']['cast'] = meta['credits'][0]['peoples'].split(',')
+            if 'live' in meta and 'startDate' in meta['live']:
+                dttm = GemV2.iso8601_to_local(meta['live']['startDate'])
+                retval['label'] += f' [Live: {dttm}]'
+
         if 'idMedia' in item:
-            if 'metadata' in item and 'live' in item['metadata']:
+            if 'mediaType' in item and item['mediaType'] == 'LiveToVod':
                 retval['app_code'] = 'medianetlive'
-            elif 'mediaType' in item and item['mediaType'] == 'LiveToVod':
-                retval['app_code'] = 'medianet'
             else:
                 retval['app_code'] = 'gem'
         return retval
