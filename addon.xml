@@ -28,6 +28,9 @@
     <forum>https://forum.kodi.tv/showthread.php?tid=328421</forum>
     <website>https://watch.cbc.ca/</website>
     <source>https://github.com/micahg/plugin.video.cbc</source>
-    <news>- Updates for new Auth API</news>
+    <news>
+      - Updates for new Auth API
+      - Fixes for live events
+    </news>
   </extension>
 </addon>
