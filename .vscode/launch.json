@@ -15,7 +15,7 @@
             "justMyCode": true  
         },
         {
-            "name": "Python: Shows Format",
+            "name": "Python: Shows Category",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
@@ -23,7 +23,18 @@
             "args": [ "-f", "category/shows" ],
             "console": "integratedTerminal",
             "justMyCode": true  
-        },        {
+        },
+        {
+            "name": "Python: Sports Section",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "args": [ "-f", "section/sports" ],
+            "console": "integratedTerminal",
+            "justMyCode": true  
+        },
+        {
             "name": "Python: Guide",
             "type": "debugpy",
             "request": "launch",
