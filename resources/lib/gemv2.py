@@ -229,10 +229,20 @@ class GemV2:
                 retval['label'] += f' [Live: {dttm}]'
 
         if 'idMedia' in item:
-            if 'mediaType' in item and item['mediaType'] == 'LiveToVod':
-                retval['app_code'] = 'medianetlive'
-            else:
-                retval['app_code'] = 'gem'
+            # logic in https://services.radio-canada.ca/ott/catalog/v1/gem/settings?device=web
+            if 'type' in item:
+                match item['type'].lower():
+                    case 'media':
+                        retval['app_code'] = 'gem'
+                    case 'quickturn':
+                        retval['app_code'] = 'medianet'
+                    case 'liveevent' | 'replay':
+                        retval['app_code'] = 'medianetlive'
+                    case _:
+                        log(f'Unknown type {item["type"]} for item with idMedia {item["idMedia"]}, defaulting to app_code "gem"')
+                        retval['app_code'] = 'gem'
+
+                
         return retval
 
     @staticmethod

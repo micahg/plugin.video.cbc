@@ -71,6 +71,8 @@ if options.format:
         b = GemV2.get_format(options.format)
         # 8 was Rosemary Barton Live
         for i in range(0, len(b)):
+            # if b[i]['url'] == 'about-that-with-andrew-chang':
+            #     break
             if b[i]['url'] == 'rosemary-barton-live':
                 break
         # i = 1
@@ -100,7 +102,7 @@ if options.format:
         p = GemV2.normalized_format_path(b[0], options.format)
         b = GemV2.get_format(p)
         # i think these are upcomming
-        idx = 15
+        idx = 0
         n = GemV2.normalized_format_item(b[idx])
         print(f'{n["label"]}')
         p = GemV2.normalized_format_path(b[idx], p)
