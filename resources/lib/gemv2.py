@@ -113,7 +113,6 @@ class GemV2:
                 return None
             results = jsObj['lineups']['results']
             if key is not None:
-                # log(results, True)
                 # as described above, we have to search through the lineups to find the one with the right key, then return its items
                 for r in results:
                     if 'key' in r and r['key'] == key:
