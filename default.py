@@ -229,7 +229,6 @@ def layout_menu(path):
             item.setArt(n['art'])
         item.setInfo(type="Video", infoLabels=n['info_labels'])
         if n['playable']:
-            log(n, True)
             item.setProperty('IsPlayable', 'true')
             url = plugin.url_for(play_live_channel, id=p, app_code=n['app_code'])
         else:
