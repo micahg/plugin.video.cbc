@@ -99,8 +99,6 @@ class GemV2:
             # if there is a first part and it's not category or section, its a season, eg: 'curling-canada-vs-sweden-mixed-doubles-round-robin-29364/1'
             path = part[2]
 
-        log(f'{path} {key} {fmt}', True)
-
         # if there is no first part we may be dealing with a show, eg: snowboard-pgs-mens-womens-final-31718
         url = fmt.format(path)
         jsObj = GemV2.scrape_json(url)
