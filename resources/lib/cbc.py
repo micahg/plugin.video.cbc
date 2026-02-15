@@ -10,7 +10,7 @@ from xml.dom.minidom import parseString
 
 import requests
 
-from .utils import save_cookies, loadCookies, saveAuthorization, log
+from .utils import save_cookies, loadCookies, saveAuthorization, log, iso8601_to_local, is_pending
 
 # http_client.HTTPConnection.debuglevel = 1
 
@@ -336,8 +336,8 @@ class CBC:
             'studio': 'Canadian Broadcasting Corporation',
             'country': 'Canada'
         }
-        if 'cbc$callSign' in item:
-            labels['title'] = '{} {}'.format(item['cbc$callSign'], item['title'])
+        if 'streamTitle' in item:
+            labels['title'] = item['streamTitle'].encode('utf-8')
         else:
             labels['title'] = item['title'].encode('utf-8')
 
@@ -372,6 +372,10 @@ class CBC:
         elif 'cbc$audioVideo' in item:
             if item['cbc$audioVideo'].lower() == 'video':
                 labels['mediatype'] = 'video'
+
+        if 'airDate' in item:
+            local_dt = iso8601_to_local(item['airDate'])
+            is_pending(local_dt, item=labels)
 
         return labels
 

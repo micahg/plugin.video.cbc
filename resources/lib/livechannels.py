@@ -1,5 +1,4 @@
 """Module for live channels."""
-from concurrent import futures
 import json
 from urllib.parse import urlencode
 
@@ -9,8 +8,7 @@ from resources.lib.utils import save_cookies, loadCookies, log, get_iptv_channel
 from resources.lib.cbc import CBC
 from resources.lib.gemv2 import GemV2
 
-LIST_URL = 'https://services.radio-canada.ca/ott/catalog/v2/gem/home?device=web'
-LIST_ELEMENT = '2415871718'
+LIST_URL = 'https://gem.cbc.ca/_next/data/7ByKb_CElwT2xVJeTO43g/live.json'
 
 class LiveChannels:
     """Class for live channels."""
@@ -32,23 +30,47 @@ class LiveChannels:
             return None
         save_cookies(self.session.cookies)
 
-        ret = None
-        for result in json.loads(resp.content)['lineups']['results']:
-            if result['key'] == LIST_ELEMENT:
-                ret = result['items']
+        data = json.loads(resp.content)
+        page_data = data.get('pageProps', {}).get('data', {})
+        streams = page_data.get('streams', [])
+        free_tv_items = page_data.get('freeTv', {}).get('items', [])
 
-        future_to_callsign = {}
-        with futures.ThreadPoolExecutor(max_workers=20) as executor:
-            for i, channel in enumerate(ret):
-                callsign = CBC.get_callsign(channel)
-                future = executor.submit(self.get_channel_metadata, callsign)
-                future_to_callsign[future] = i
+        channels = []
+        for stream in streams:
+            items = stream.get('items', [])
+            if len(items) == 0:
+                continue
 
-        for future in futures.as_completed(future_to_callsign):
-            i = future_to_callsign[future]
-            metadata = future.result()
-            ret[i]['image'] = metadata['Metas']['imageHR']
-        return ret
+            for item in items:
+                channel = dict(item)
+                if 'title' not in channel or not channel['title']:
+                    channel['title'] = stream.get('title')
+                if 'genericImage' in channel and 'image' not in channel:
+                    channel['image'] = channel['genericImage']
+                channels.append(channel)
+
+        for item in free_tv_items:
+            channel = dict(item)
+            if 'genericImage' in channel and 'image' not in channel:
+                channel['image'] = channel['genericImage']
+            channels.append(channel)
+
+        unique_channels = []
+        seen_ids = set()
+        for channel in channels:
+            id_media = channel.get('idMedia')
+
+            if id_media is None:
+                unique_channels.append(channel)
+                continue
+
+            if id_media in seen_ids:
+                continue
+
+            seen_ids.add(id_media)
+            unique_channels.append(channel)
+
+        return unique_channels
 
     def get_iptv_channels(self):
         """Get the channels in a IPTV Manager compatible list."""

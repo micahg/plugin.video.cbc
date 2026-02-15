@@ -12,6 +12,8 @@ from resources.lib.livechannels import LiveChannels
 
 # Y/M/D
 GUIDE_URL_FMT = 'https://www.cbc.ca/programguide/daily/{}/cbc_television'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+REQUEST_TIMEOUT = (10, 20)
 
 # This is a combination of actual callsigns (NN for newsnet) and guid values
 # for over-the-top-only services. No doubt, someone will come back here some
@@ -87,9 +89,14 @@ def get_guide_url(dttm, callsign=None):
 def call_guide_url(url, location=None):
     """Call the guide URL and return the response body."""
     cookies = {}
+    headers = {'User-Agent': USER_AGENT}
     if location is not None:
         cookies['pgTvLocation'] = location
-    resp = requests.get(url, cookies=cookies)
+    try:
+        resp = requests.get(url, cookies=cookies, headers=headers, timeout=REQUEST_TIMEOUT)
+    except requests.RequestException as ex:
+        log(f'HTTP request failed for {url}: {ex}', True)
+        return None
     if resp.status_code != 200:
         log('{} returns status of {}'.format(url, resp.status_code), True)
         return None
