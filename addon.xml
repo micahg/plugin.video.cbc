@@ -29,9 +29,10 @@
     <website>https://watch.cbc.ca/</website>
     <source>https://github.com/micahg/plugin.video.cbc</source>
     <news>
-      - Remove dead code
-      - Fix match bug
+      - Add back missing live channels
       - Better live event handling
+      - Better EPG error handling
+      - Remove dead code and fix match bug
     </news>
   </extension>
 </addon>
