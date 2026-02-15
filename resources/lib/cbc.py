@@ -6,11 +6,10 @@ import secrets
 import json
 # import http.client as http_client
 from urllib.parse import urlparse, parse_qs, quote
-from xml.dom.minidom import parseString
 
 import requests
 
-from .utils import save_cookies, loadCookies, saveAuthorization, log, iso8601_to_local, is_pending
+from .utils import saveAuthorization, log, iso8601_to_local, is_pending
 
 # http_client.HTTPConnection.debuglevel = 1
 
@@ -65,9 +64,6 @@ class CBC:
         """Initialize the CBC class."""
         # Create requests session object
         self.session = requests.Session()
-        session_cookies = loadCookies()
-        if session_cookies is not None:
-            self.session.cookies = session_cookies
 
     @staticmethod
     def azure_authorize_authorize(sess: requests.Session):
@@ -383,8 +379,4 @@ class CBC:
     @staticmethod
     def get_session():
         """Get a requests session object with CBC cookies."""
-        sess = requests.Session()
-        cookies = loadCookies()
-        if cookies is not None:
-            sess.cookies = cookies
-        return sess
+        return requests.Session()

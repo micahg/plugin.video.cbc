@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 
 import requests
 
-from resources.lib.utils import save_cookies, loadCookies, log, get_iptv_channels_file
+from resources.lib.utils import log, get_iptv_channels_file
 from resources.lib.cbc import CBC
 from resources.lib.gemv2 import GemV2
 
@@ -17,9 +17,6 @@ class LiveChannels:
         """Initialize the live channels class."""
         # Create requests session object
         self.session = requests.Session()
-        session_cookies = loadCookies()
-        if session_cookies is not None:
-            self.session.cookies = session_cookies
 
     def get_live_channels(self):
         """Get the list of live channels."""
@@ -28,7 +25,6 @@ class LiveChannels:
         if not resp.status_code == 200:
             log('ERROR: {} returns status of {}'.format(LIST_URL, resp.status_code), True)
             return None
-        save_cookies(self.session.cookies)
 
         data = json.loads(resp.content)
         page_data = data.get('pageProps', {}).get('data', {})
@@ -121,7 +117,6 @@ class LiveChannels:
         if not resp.status_code == 200:
             log('ERROR: {} returns status of {}'.format(LIST_URL, resp.status_code), True)
             return None
-        save_cookies(self.session.cookies)
         return json.loads(resp.content)
 
     @staticmethod

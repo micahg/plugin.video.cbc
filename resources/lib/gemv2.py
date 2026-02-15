@@ -222,16 +222,16 @@ class GemV2:
         if 'idMedia' in item:
             # logic in https://services.radio-canada.ca/ott/catalog/v1/gem/settings?device=web
             if 'type' in item:
-                match item['type'].lower():
-                    case 'media':
-                        retval['app_code'] = 'gem'
-                    case 'quickturn':
-                        retval['app_code'] = 'medianet'
-                    case 'liveevent' | 'replay':
-                        retval['app_code'] = 'medianetlive'
-                    case _:
-                        log(f'Unknown type {item["type"]} for item with idMedia {item["idMedia"]}, defaulting to app_code "gem"')
-                        retval['app_code'] = 'gem'
+                item_type = item['type'].lower()
+                if item_type == 'media':
+                    retval['app_code'] = 'gem'
+                elif item_type == 'quickturn':
+                    retval['app_code'] = 'medianet'
+                elif item_type == 'liveevent' or item_type == 'replay':
+                    retval['app_code'] = 'medianetlive'
+                else:
+                    log(f'Unknown type {item["type"]} for item with idMedia {item["idMedia"]}, defaulting to app_code "gem"')
+                    retval['app_code'] = 'gem'
 
                 
         return retval

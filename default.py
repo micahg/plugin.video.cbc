@@ -12,7 +12,7 @@ import inputstreamhelper
 import routing
 
 from resources.lib.cbc import CBC
-from resources.lib.utils import log, getAuthorizationFile, get_cookie_file, get_iptv_channels_file, is_pending, iso8601_to_local
+from resources.lib.utils import log, getAuthorizationFile, get_iptv_channels_file, is_pending, iso8601_to_local
 from resources.lib.livechannels import LiveChannels
 from resources.lib.gemv2 import GemV2
 from resources.lib.iptvmanager import IPTVManager
@@ -119,7 +119,6 @@ def logout():
     """Remove authorization stuff."""
     log('Logging out...', True)
     os.remove(getAuthorizationFile())
-    os.remove(get_cookie_file())
 
 
 @plugin.route('/iptv/channels')
