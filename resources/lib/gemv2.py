@@ -216,7 +216,7 @@ class GemV2:
                 retval['info_labels']['cast'] = meta['credits'][0]['peoples'].split(',')
             if 'live' in meta and 'startDate' in meta['live']:
                 local_dt = iso8601_to_local(meta['live']['startDate'])
-                if is_pending(local_dt, item=retval):
+                if local_dt is not None and is_pending(local_dt, item=retval):
                     retval['playable'] = False
 
         if 'idMedia' in item:

@@ -371,7 +371,8 @@ class CBC:
 
         if 'airDate' in item:
             local_dt = iso8601_to_local(item['airDate'])
-            is_pending(local_dt, item=labels)
+            if local_dt is not None:
+                is_pending(local_dt, item=labels)
 
         return labels
 

@@ -1,5 +1,6 @@
 """Module for live channels."""
 import json
+import re
 from urllib.parse import urlencode
 
 import requests
@@ -8,7 +9,9 @@ from resources.lib.utils import log, get_iptv_channels_file
 from resources.lib.cbc import CBC
 from resources.lib.gemv2 import GemV2
 
-LIST_URL = 'https://gem.cbc.ca/_next/data/7ByKb_CElwT2xVJeTO43g/live.json'
+GEM_BASE_URL = 'https://gem.cbc.ca/'
+FALLBACK_BUILD_ID = '7ByKb_CElwT2xVJeTO43g'
+LIST_URL_TEMPLATE = 'https://gem.cbc.ca/_next/data/{}/live.json'
 
 class LiveChannels:
     """Class for live channels."""
@@ -18,12 +21,53 @@ class LiveChannels:
         # Create requests session object
         self.session = requests.Session()
 
+    @staticmethod
+    def extract_build_id(html):
+        """Extract Next.js buildId from page HTML."""
+        script_start = '<script id="__NEXT_DATA__" type="application/json">'
+        script_end = '</script>'
+        start_pos = html.find(script_start)
+        if start_pos >= 0:
+            start_pos += len(script_start)
+            end_pos = html.find(script_end, start_pos)
+            if end_pos > start_pos:
+                try:
+                    next_data = json.loads(html[start_pos:end_pos])
+                    build_id = next_data.get('buildId')
+                    if build_id:
+                        return build_id
+                except (ValueError, TypeError):
+                    pass
+
+        match = re.search(r'/_next/static/([^/]+)/_buildManifest\\.js', html)
+        if match:
+            return match.group(1)
+
+        return None
+
+    def get_live_list_url(self):
+        """Build the live channel JSON URL dynamically from current Next.js buildId."""
+        try:
+            resp = self.session.get(GEM_BASE_URL)
+            if resp.status_code == 200:
+                build_id = self.extract_build_id(resp.text)
+                if build_id:
+                    return LIST_URL_TEMPLATE.format(build_id)
+                log('WARNING: Unable to find buildId in {} response'.format(GEM_BASE_URL), True)
+            else:
+                log('WARNING: {} returns status of {}'.format(GEM_BASE_URL, resp.status_code), True)
+        except requests.RequestException as err:
+            log('WARNING: Error fetching {}: {}'.format(GEM_BASE_URL, err), True)
+
+        return LIST_URL_TEMPLATE.format(FALLBACK_BUILD_ID)
+
     def get_live_channels(self):
         """Get the list of live channels."""
-        resp = self.session.get(LIST_URL)
+        list_url = self.get_live_list_url()
+        resp = self.session.get(list_url)
 
         if not resp.status_code == 200:
-            log('ERROR: {} returns status of {}'.format(LIST_URL, resp.status_code), True)
+            log('ERROR: {} returns status of {}'.format(list_url, resp.status_code), True)
             return None
 
         data = json.loads(resp.content)
