@@ -66,29 +66,57 @@ if options.browse:
         print(a)
     sys.exit(0)
 if options.format:
-    # b = GemV2.get_format('experience/olympics')
-    b = GemV2.get_format(options.format)
-    # 8 was Rosemary Barton Live
-    i = 8
-    n = GemV2.normalized_format_item(b[i])
-    p = GemV2.normalized_format_path(b[i])
-    print(n)
-    b = GemV2.get_format(p)
-    # [2] is season 3
-    n = GemV2.normalized_format_item(b[2])
-    p = GemV2.normalized_format_path(b[2])
-    print(n)
-    b = GemV2.get_format(p)
-    n = GemV2.normalized_format_item(b[4])
-    p = GemV2.normalized_format_path(b[4])
-    print(n)
-    s = GemV2.get_stream(id=p, app_code=n['app_code'])
-    print(f"{s['type']} {s['url']}")
-    x = GemV2.get_stream_drm(s)
-    wv_url, wv_tok = GemV2.get_stream_drm(s)
-    print(wv_url)
-    print(wv_tok)
-    sys.exit(0)
+    if options.format == "category/shows":
+        # b = GemV2.get_format('experience/olympics')
+        b = GemV2.get_format(options.format)
+        # 8 was Rosemary Barton Live
+        for i in range(0, len(b)):
+            # if b[i]['url'] == 'about-that-with-andrew-chang':
+            #     break
+            if b[i]['url'] == 'rosemary-barton-live':
+                break
+        # i = 1
+        n = GemV2.normalized_format_item(b[i])
+        p = GemV2.normalized_format_path(b[i], options.format)
+        print(n)
+        b = GemV2.get_format(p)
+        # [2] is season 3
+        n = GemV2.normalized_format_item(b[0])
+        p = GemV2.normalized_format_path(b[0], p)
+        print(n)
+        b = GemV2.get_format(p)
+        n = GemV2.normalized_format_item(b[0])
+        p = GemV2.normalized_format_path(b[0], p)
+        print(n)
+        s = GemV2.get_stream(id=p, app_code=n['app_code'])
+        print(f"{s['type']} {s['url']}")
+        x = GemV2.get_stream_drm(s)
+        wv_url, wv_tok = GemV2.get_stream_drm(s)
+        print(wv_url)
+        print(wv_tok)
+        sys.exit(0)
+    if options.format == "section/sports":
+        b = GemV2.get_format(options.format)        
+        n = GemV2.normalized_format_item(b[0])
+        # print(f'{n["label"]}')
+        p = GemV2.normalized_format_path(b[0], options.format)
+        b = GemV2.get_format(p)
+        # i think these are upcomming
+        idx = 0
+        n = GemV2.normalized_format_item(b[idx])
+        print(f'{n["label"]}')
+        p = GemV2.normalized_format_path(b[idx], p)
+        b = GemV2.get_format(p)
+        n = GemV2.normalized_format_item(b[0])
+        print(f'{n["label"]}')
+        p = GemV2.normalized_format_path(b[0], p)
+        s = GemV2.get_stream(id=p, app_code=n['app_code'])
+        print(f"{s['type']} {s['url']}")
+        x = GemV2.get_stream_drm(s)
+        wv_url, wv_tok = GemV2.get_stream_drm(s)
+        print(wv_url)
+        print(wv_tok)
+        sys.exit(0)
 if options.guide:
     get_iptv_epg()
 elif options.iptv:
