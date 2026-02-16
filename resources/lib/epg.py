@@ -65,7 +65,7 @@ def map_channel_ids(unblocked):
     """Map channel IDs to guide names."""
     url = get_guide_url(datetime.now())
     data = call_guide_url(url)
-    if not data:
+    if data is None:
         log('Unable to map channel IDs: no data returned from {}'.format(url), True)
         return { sign: None for sign in SPECIAL_GUIDES.keys()}
 
@@ -116,7 +116,7 @@ def get_channel_data(dttm, channel, callsign):
     epg_data = []
     url = get_guide_url(dttm, callsign)
     data = call_guide_url(url, channel)
-    if not data:
+    if data is None:
         return epg_data
 
     soup = BeautifulSoup(data, features="html.parser")

@@ -30,7 +30,7 @@ class GemV2:
         
         try:
             jsObj = json.loads(resp.content)
-        except:
+        except (json.JSONDecodeError, ValueError, TypeError):
             log(f'Unable to parse JSON from {uri} (status {resp.status_code})', True)
             return None
         return jsObj
