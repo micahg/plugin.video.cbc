@@ -65,8 +65,16 @@ def map_channel_ids(unblocked):
     """Map channel IDs to guide names."""
     url = get_guide_url(datetime.now())
     data = call_guide_url(url)
+    if not data:
+        log('Unable to map channel IDs: no data returned from {}'.format(url), True)
+        return { sign: None for sign in SPECIAL_GUIDES.keys()}
+
     soup = BeautifulSoup(data, features="html.parser")
     select = soup.find('select', id="selectlocation-tv")
+    if select is None:
+        log('Unable to map channel IDs: missing location selector at {}'.format(url), True)
+        return { sign: None for sign in SPECIAL_GUIDES.keys()}
+
     options = select.find_all('option')
     channel_map = { sign: None for sign in SPECIAL_GUIDES.keys()}
     for option in options:
@@ -108,9 +116,21 @@ def get_channel_data(dttm, channel, callsign):
     epg_data = []
     url = get_guide_url(dttm, callsign)
     data = call_guide_url(url, channel)
+    if not data:
+        return epg_data
+
     soup = BeautifulSoup(data, features="html.parser")
 
-    select = soup.find('table', id="sched-table").find('tbody')
+    table = soup.find('table', id="sched-table")
+    if table is None:
+        log('Missing schedule table at "{}"'.format(url), True)
+        return epg_data
+
+    select = table.find('tbody')
+    if select is None:
+        log('Missing schedule body at "{}"'.format(url), True)
+        return epg_data
+
     progs = select.find_all('tr')
     for prog in progs:
         prog_js = {}
@@ -129,7 +149,9 @@ def get_channel_data(dttm, channel, callsign):
                     prog_js = {}
                     break
                 prog_js['title'] = title_cell.get_text()
-                prog_js['description'] = cell.find('dd').get_text()
+                description_cell = cell.find('dd')
+                if description_cell is not None:
+                    prog_js['description'] = description_cell.get_text()
 
         # skip the header row
         if len(prog_js.items()) == 0:
